@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('transaction_id')->constrained('transactions', 'transaction_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('status');
             $table->string('bukti_pembayaran')->nullable();
-            $table->datetime('tgl_bayar')->nullable();
+            $table->datetime('tgl_bayar')->useCurrent()->nullable();
             $table->string('tipe_pembayaran');
             $table->string('kode_pembayaran');
             $table->timestamps();

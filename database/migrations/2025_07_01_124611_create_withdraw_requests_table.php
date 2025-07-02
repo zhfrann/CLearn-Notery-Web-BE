@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('withdraw_requests', function (Blueprint $table) {
-            $table->id('withdraw_id');
+            $table->id('withdraw_request_id');
             $table->foreignId('user_id')->constrained('users', 'user_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('payout_method_id')->constrained('payout_methods', 'payout_method_id');
             $table->integer('jumlah');
