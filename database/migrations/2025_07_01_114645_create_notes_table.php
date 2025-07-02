@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('harga')->default(0);
             $table->string('nama_file');
             $table->integer('jumlah_terjual')->default(0);
+            $table->string('preview_image')->nullable();
             $table->timestamps();
         });
     }
