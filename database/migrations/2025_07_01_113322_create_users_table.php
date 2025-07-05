@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->enum('role', ['student', 'admin'])->default('student');
-            $table->string('status')->default('aktif');
+            $table->enum('status_akun', ['aktif', 'nonaktif'])->default('aktif');
+            $table->string('deskripsi')->nullable();
             $table->foreignId('major_id')->constrained('majors', 'major_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('semester_id')->constrained('semesters', 'semester_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('faculty_id')->constrained('faculties', 'faculty_id')->cascadeOnUpdate()->cascadeOnDelete();

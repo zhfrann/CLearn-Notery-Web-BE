@@ -24,7 +24,10 @@ class Note extends Model
         'deskripsi',
         'harga',
         'nama_file',
-        'jumlah_terjual'
+        'jumlah_terjual',
+        'jumlah_like',
+        'jumlah_dikunjungi',
+        'gambar_preview'
     ];
 
     public function seller(): BelongsTo

@@ -33,7 +33,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'status',
+        'status_akun',
+        'deskripsi',
         'major_id',
         'semester_id',
         'faculty_id',
@@ -130,5 +131,15 @@ class User extends Authenticatable
     {
         return ChatRoom::query()->where('user_one_id', $this->user_id)
             ->orWhere('user_two_id', $this->user_id);
+    }
+
+    public function reviewResponses(): HasMany
+    {
+        return $this->hasMany(ReviewResponse::class, 'seller_id', 'user_id');
+    }
+
+    public function reviewVotes(): HasMany
+    {
+        return $this->hasMany(ReviewVote::class, 'user_id', 'user_id');
     }
 }

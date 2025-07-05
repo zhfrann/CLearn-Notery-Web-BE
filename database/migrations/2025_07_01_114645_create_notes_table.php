@@ -19,8 +19,9 @@ return new class extends Migration
             $table->text('deskripsi');
             $table->integer('harga')->default(0);
             $table->string('nama_file');
-            $table->integer('jumlah_terjual')->default(0);
+            $table->unsignedInteger('jumlah_terjual')->default(0);
             $table->unsignedInteger('jumlah_like')->default(0);
+            $table->unsignedInteger('jumlah_dikunjungi')->default(0);
             $table->string('gambar_preview')->nullable();
             $table->timestamps();
         });
