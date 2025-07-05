@@ -62,6 +62,15 @@ class User extends Authenticatable
         // 'email_verified_at' => 'datetime',
     ];
 
+    public function getFotoProfilUrlAttribute()
+    {
+        // return $this->foto_profil
+        //     ? asset('storage/' . $this->foto_profil)
+        //     : asset('storage/foto_profil/default.jpg');
+
+        return asset('storage/' . $this->foto_profil);
+    }
+
     public function major(): BelongsTo
     {
         return $this->belongsTo(Major::class, 'major_id', 'major_id');
