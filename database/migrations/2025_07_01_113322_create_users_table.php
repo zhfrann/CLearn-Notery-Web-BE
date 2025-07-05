@@ -20,9 +20,9 @@ return new class extends Migration
             $table->enum('role', ['student', 'admin'])->default('student');
             $table->enum('status_akun', ['aktif', 'nonaktif'])->default('aktif');
             $table->string('deskripsi')->nullable();
-            $table->foreignId('major_id')->constrained('majors', 'major_id')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('semester_id')->constrained('semesters', 'semester_id')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('faculty_id')->constrained('faculties', 'faculty_id')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('major_id')->nullable()->constrained('majors', 'major_id')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('semester_id')->nullable()->constrained('semesters', 'semester_id')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('faculty_id')->nullable()->constrained('faculties', 'faculty_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('matkul_favorit')->nullable();
             $table->string('foto_profil')->nullable();
             $table->decimal('rating', 2, 1)->default(0);
