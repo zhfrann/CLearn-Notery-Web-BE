@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
   title: Notery API
-  description: This is a documentation of Notery Backend RESTful API.
+  description: This is a documentation of Notery Backend RESTful API. You can try this documentation using [https://editor.swagger.io/](https://editor.swagger.io/). Copy and paste everything from here to [https://editor.swagger.io/](https://editor.swagger.io/)
   version: 1.0.0
-servers:
-  - url: http://localhost:8000
+# servers:
+#   - url: http://localhost:8000
 tags:
   - name: auth
     description: Authentication functionality
@@ -92,4 +92,157 @@ paths:
                       password:
                         - The password field is required.
                         - The password field must be at least 6 characters.
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Login user
+      description: Login user dengan username dan password
+      requestBody:
+        description: Data login user
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: user1
+                password:
+                  type: string
+                  example: rahasia123
+      responses:
+        '200':
+          description: Login berhasil
+          content:
+            application/json:
+              examples:
+                success:
+                  description: Login berhasil
+                  value:
+                    success: true
+                    message: Login berhasil
+                    data:
+                      user:
+                        user_id: 1
+                        username: user1
+                        email: user1@gmail.com
+                        foto_profil: foto_profil/user1.png
+                        role: student
+                        status_akun: aktif
+                        semester: null
+                        major: null
+                        faculty: null
+                        rating: null
+                        matkul_favorit: null
+                      access_token: token_example
+                      token_type: Bearer
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          user_id:
+                            type: integer
+                          username:
+                            type: string
+                          email:
+                            type: string
+                          foto_profil:
+                            type: string
+                          role:
+                            type: string
+                          status_akun:
+                            type: string
+                          semester:
+                            type: string
+                            nullable: true
+                          major:
+                            type: string
+                            nullable: true
+                          faculty:
+                            type: string
+                            nullable: true
+                          rating:
+                            type: number
+                            nullable: true
+                          matkul_favorit:
+                            type: string
+                            nullable: true
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+        '401':
+          description: Login gagal (username/password salah)
+          content:
+            application/json:
+              examples:
+                failed:
+                  description: Login gagal
+                  value:
+                    success: false
+                    message: Email atau password salah.
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
 
+  /auth/logout:
+    delete:
+      tags:
+        - auth
+      summary: Logout user
+      description: Logout user (harus sudah login)
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Token yang dimiliki user setelah login
+          schema:
+            type: string
+            properties:
+              Authorization:
+                type: string
+      responses:
+        '200':
+          description: Logout berhasil
+          content:
+            application/json:
+              examples:
+                success:
+                  description: Logout berhasil
+                  value:
+                    success: true
+                    message: Logout berhasil.
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Tidak terautentikasi (token tidak valid/habis)
+          content:
+            application/json:
+              examples:
+                unauthorized:
+                  description: Tidak terautentikasi
+                  value:
+                    message: "Unauthenticated."
