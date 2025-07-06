@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: Notery API
+  description: This is a documentation of Notery Backend RESTful API.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: auth
+    description: Authentication functionality
+  - name: user
+    description: Operations about user
+paths:
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: Register new user
+      description: Register a new user
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Success register new user
+          content:
+            application/json:
+              examples:
+                success:
+                  description: Success register new user
+                  value:
+                    success: true,
+                    message: Register user1 berhasil,
+                    data:
+                      user_id: 1,
+                      nama: null,
+                      username: user1,
+                      email: user1@gmail.com,
+                      role: student,
+                      status_akun: aktif,
+                      deskripsi: null,
+                      semester: null,
+                      major: null,
+                      faculty: null,
+                      matkul_favorit: null,
+                      foto_profil: foto_profil\/user1.png,
+                      rating: null
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      username:
+                        type: string
+                      name:
+                        type: string
+                  errors:
+                    type: object
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              examples:
+                validationerror:
+                  description: Validation error
+                  value:
+                    message: ...
+                    errors:
+                      username:
+                        - The username field is required.
+                        - The username has already been taken.
+                      email:
+                        - The email field is required.
+                        - The email has already been taken.
+                      password:
+                        - The password field is required.
+                        - The password field must be at least 6 characters.
+
