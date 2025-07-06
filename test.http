@@ -45,7 +45,7 @@ Accept: application/json
 
 
 ### Get Detail User
-GET http://localhost:8000/api/current-user
+GET http://localhost:8000/api/user
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer <token user here>
