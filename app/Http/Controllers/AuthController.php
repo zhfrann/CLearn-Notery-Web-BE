@@ -48,7 +48,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => "Register $user->username berhasil",
             // 'data' => $user->toArray()
-            'data' => new UserResource($user->load(['notes', 'semester', 'major', 'faculty']))
+            'data' => new UserResource($user->load(['semester', 'major', 'faculty']))
         ], 201);
     }
 

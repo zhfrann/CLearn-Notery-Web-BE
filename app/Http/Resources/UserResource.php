@@ -36,8 +36,8 @@ class UserResource extends JsonResource
             'foto_profil' => $this->foto_profil,
             'rating' => $this->rating,
 
-            'notes_jualan' => NoteResource::collection($this->whenLoaded('notes')),
-            'notes_koleksi' => SavedNoteResource::collection($this->whenLoaded('savedNotes'))
+            // 'notes_jualan' => NoteResource::collection($this->whenLoaded('notes')),
+            // 'notes_koleksi' => SavedNoteResource::collection($this->whenLoaded('savedNotes'))
         ];
     }
 }
