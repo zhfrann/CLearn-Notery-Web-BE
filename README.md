@@ -3,7 +3,7 @@
 Clone the project
 
 ```bash
-git clone https://github.com/chevalierlab-sas/CLearn-Notery-Web-BE.git
+git clone https://github.com/zhfrann/CLearn-Notery-Web-BE.git
 ```
 
 Go to the project directory
@@ -24,7 +24,7 @@ Copy and set the .env
 cp .env.example .env
 ```
 
-Configure the DB_DATABASE, DB_USERNAME, DB_PASSWORD
+Configure the DB_DATABASE, DB_USERNAME, DB_PASSWORD in .env
 
 Generate Application Key
 
