@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -46,7 +47,8 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Register $user->username berhasil",
-            'data' => $user->toArray()
+            // 'data' => $user->toArray()
+            'data' => new UserResource($user->load(['notes', 'semester', 'major', 'faculty']))
         ], 201);
     }
 
@@ -72,20 +74,20 @@ class AuthController extends Controller
             'success' => true,
             'message' => "Login berhasil",
             'data' => [
-                'user' => [
-                    'user_id' => $user->user_id,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'foto_profil' => $user->foto_profil_url,
-                    'role' => $user->role,
-                    'status_akun' => $user->status_akun,
-                    'semester' => $user->semester,
-                    'major' => $user->major,
-                    'faculty' => $user->faculty,
-                    'rating' => $user->rating,
-                    'matkul_favorit' => $user->matkul_favorit,
-
-                ],
+                // 'user' => [
+                //     'user_id' => $user->user_id,
+                //     'username' => $user->username,
+                //     'email' => $user->email,
+                //     'foto_profil' => $user->foto_profil_url,
+                //     'role' => $user->role,
+                //     'status_akun' => $user->status_akun,
+                //     'semester' => $user->semester,
+                //     'major' => $user->major,
+                //     'faculty' => $user->faculty,
+                //     'rating' => $user->rating,
+                //     'matkul_favorit' => $user->matkul_favorit,
+                // ],
+                'user' => new UserResource($user->load(['semester', 'major', 'faculty'])),
                 'access_token' => $token,
                 'token_type' => 'Bearer',
             ]
