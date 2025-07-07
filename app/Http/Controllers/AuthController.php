@@ -55,8 +55,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'username' => ['required', 'max:255'],
-            'password' => ['required', 'min:6'],
+            'username' => ['required'],
+            'password' => ['required'],
         ]);
 
         $user = User::query()->where('username', $credentials['username'])->first();
