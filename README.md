@@ -44,6 +44,12 @@ or you can run the seeder to seed initial data
 php artisan migrate --seed
 ```
 
+Make symbolic link for storage
+
+```bash
+php artisan storage:link
+```
+
 Start the server
 
 ```bash
