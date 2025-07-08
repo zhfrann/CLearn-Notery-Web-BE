@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('major_id')->constrained('majors', 'major_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->integer('nomor_semester');
             $table->string('tahun_ajaran');
-            $table->string('periode');
+            // $table->string('periode');
             $table->timestamps();
         });
     }
