@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use Database\Seeders\FIT\DIF\DIFCourseSeeder;
+use Database\Seeders\FIT\FITMajorSeeder;
+use Database\Seeders\FIT\FITSemesterSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -21,7 +24,12 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            FacultySeeder::class
+            FacultySeeder::class,
+            FITMajorSeeder::class,
+            FITSemesterSeeder::class,
+            DIFCourseSeeder::class,
+
+
         ]);
     }
 }
