@@ -64,7 +64,7 @@ class AuthController extends Controller
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw new HttpResponseException(response()->json([
                 'success' => false,
-                'message' => 'Email atau password salah.'
+                'message' => 'Username atau password salah.'
             ], 401));
         }
 
