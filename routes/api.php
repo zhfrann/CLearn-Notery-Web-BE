@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NoteController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileDataController;
+use App\Http\Controllers\ReviewController;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -33,17 +37,47 @@ Route::prefix('/auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/user', function (Request $request) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Data informasi user.',
-            'data' => $request->user()
-        ]);
-    });
-    Route::prefix('/user')->group(function () {
-        // Route::get(/{id}/notes, [...]);
-        // Route::get(/{id}/reviews, [...]);
-    });
+    Route::get('/profile', [ProfileController::class, 'getProfileDetail']);
+    Route::put('/profile', [ProfileController::class, 'updateProfile']);
+    // Route::put('/profile/password', [ProfileController::class, 'changePassword']);
+    // Route::put('/profile/photo', [ProfileController::class, 'updatePhoto']);
+    Route::get('/profile/notes', [ProfileController::class, 'getNotes']);
+
+    Route::get('/profile/product-status', [ProfileDataController::class, 'productStatus']);
+    Route::get('/profile/transactions', [ProfileDataController::class, 'transactions']);
+    // Route::get('/profile/favorites-notes', [ProfileDataController::class, 'favoritesNotes']);
+
+    Route::get('/notes/latest-notes', [NoteController::class, 'latestNotes']);
+    Route::get('/notes/most-liked-notes', [NoteController::class, 'mostLikeNotes']);
+    Route::post('/top-creator', [NoteController::class, 'topCreator']);
+
+    // Route::get('/notes', [NoteController::class, 'getAllNotes']);
+    Route::post('/notes', [NoteController::class, 'createNote']);
+
+    Route::get('/notes/{id}', [NoteController::class, 'getNoteDetail']);
+    Route::post('/notes/{id}/like', [NoteController::class, 'addLikeNote']);
+    Route::post('/notes/{id}/favorite', [NoteController::class, 'addFavoriteNote']);
+
+    Route::put('/notes/{id}', [NoteController::class, 'updateNote']);
+    // Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);
+    // Route::get('/notes/{id}/buy', [NoteController::class, 'buyNote']);
+
+    Route::get('/notes/{id}/reviews', [ReviewController::class, 'getReviews']);
+    Route::post('/notes/{id}/reviews', [ReviewController::class, 'createReview']);
+    // Route::put('/notes/{id}/reviews', [ReviewController::class, 'updateReview']);
+    // Route::delete('/notes/{id}/reviews', [ReviewController::class, 'deleteReview']);
+
+    // Route::get('/user', function (Request $request) {
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Data informasi user.',
+    //         'data' => $request->user()
+    //     ]);
+    // });
+    // Route::prefix('/user')->group(function () {
+    //     // Route::get(/{id}/notes, [...]);
+    //     // Route::get(/{id}/reviews, [...]);
+    // });
 
     // ...
 });
