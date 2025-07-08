@@ -24,7 +24,8 @@ return new class extends Migration
             $table->foreignId('major_id')->nullable()->constrained('majors', 'major_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('semester_id')->nullable()->constrained('semesters', 'semester_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('faculty_id')->nullable()->constrained('faculties', 'faculty_id')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->string('matkul_favorit')->nullable();
+            // $table->string('matkul_favorit')->nullable();
+            $table->foreignId('matkul_favorit')->nullable()->constrained('courses', 'course_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('foto_profil')->nullable();
             $table->decimal('rating', 2, 1)->default(0);
             // $table->timestamp('email_verified_at')->nullable();

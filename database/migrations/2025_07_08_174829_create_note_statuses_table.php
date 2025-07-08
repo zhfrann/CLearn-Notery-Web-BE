@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transactions', function (Blueprint $table) {
-            $table->id('transaction_id');
+        Schema::create('note_statuses', function (Blueprint $table) {
+            $table->id('note_status_id');
             $table->foreignId('note_id')->constrained('notes', 'note_id')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('buyer_id')->constrained('users', 'user_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('status');
-            $table->datetime('tgl_transaksi')->useCurrent();
-            $table->text('catatan')->nullable();
+            $table->string('catatan')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transactions');
+        Schema::dropIfExists('note_statuses');
     }
 };
