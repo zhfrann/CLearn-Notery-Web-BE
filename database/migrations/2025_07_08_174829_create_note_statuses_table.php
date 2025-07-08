@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('semesters', function (Blueprint $table) {
-            $table->id('semester_id');
-            $table->foreignId('major_id')->constrained('majors', 'major_id')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->integer('nomor_semester');
-            $table->string('tahun_ajaran');
-            // $table->string('periode');
+        Schema::create('note_statuses', function (Blueprint $table) {
+            $table->id('note_status_id');
+            $table->foreignId('note_id')->constrained('notes', 'note_id')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->string('status');
+            $table->string('catatan')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('semesters');
+        Schema::dropIfExists('note_statuses');
     }
 };
