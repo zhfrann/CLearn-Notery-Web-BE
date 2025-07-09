@@ -36,6 +36,7 @@ class NoteController extends Controller
                 'jumlah_like' => $note->jumlah_like,
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
+                'gambar_preview' => $note->gambar_preview ? url($note->gambar_preview) : asset('images/default_preview.png'),
                 'fakultas' => $faculty ? [
                     'id' => $faculty->faculty_id,
                     'nama' => $faculty->nama_fakultas,
@@ -90,6 +91,7 @@ class NoteController extends Controller
             'prodi_id' => ['required', 'exists:majors,major_id'],
             'semester_id' => ['required', 'exists:semesters,semester_id'],
             'matkul_id' => ['required', 'exists:courses,course_id'],
+            'files' => ['required', 'array'],
             'files.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:20480']
         ]);
 
@@ -99,7 +101,6 @@ class NoteController extends Controller
                 'message' => 'Pastikan mengupload minimal 1 file.'
             ], 422));
         }
-
 
         // 1. Simpan note
         $note = Note::query()->create([
@@ -143,6 +144,23 @@ class NoteController extends Controller
             }
         }
 
+        // Setelah proses upload file
+        $gambarPreview = null;
+        foreach ($filesData as $file) {
+            if (preg_match('/\.(jpg|jpeg|png)$/i', $file['nama_file'])) {
+                $gambarPreview = $file['path_file'];
+                break;
+            }
+        }
+        if (!$gambarPreview) {
+            // Set gambar default jika tidak ada gambar
+            $gambarPreview = asset('images/default_preview.png');
+        }
+
+        // Update kolom gambar_preview di tabel notes
+        $note->gambar_preview = $gambarPreview;
+        $note->save();
+
         // 4. Ambil data relasi untuk response
         $course = Course::query()->with(['major.faculty', 'semester'])->find($validated['matkul_id']);
         $major = $course->major;
@@ -161,6 +179,7 @@ class NoteController extends Controller
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
                 'harga' => $note->harga,
+                'gambar_preview' => $note->gambar_preview ? url($note->gambar_preview) : asset('images/default_preview.png'),
                 'fakultas' => [
                     'id' => $faculty->faculty_id,
                     'nama' => $faculty->nama_fakultas,
