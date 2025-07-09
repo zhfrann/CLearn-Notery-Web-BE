@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcademicStructureController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
@@ -51,6 +52,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/product-status', [ProfileDataController::class, 'productStatus']);
     Route::get('/profile/transactions', [ProfileDataController::class, 'transactions']);
     // Route::get('/profile/favorites-notes', [ProfileDataController::class, 'favoritesNotes']);
+
+    Route::get('/faculties', [AcademicStructureController::class, 'getFaculties']);
+    Route::get('/majors', [AcademicStructureController::class, 'getMajors']);
+    Route::get('/semesters', [AcademicStructureController::class, 'getSemesters']);
+    Route::get('/courses', [AcademicStructureController::class, 'getCourses']);
 
     Route::get('/notes/latest-notes', [NoteController::class, 'latestNotes']);
     Route::get('/notes/most-liked-notes', [NoteController::class, 'mostLikeNotes']);

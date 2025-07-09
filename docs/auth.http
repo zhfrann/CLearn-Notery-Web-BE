@@ -1,5 +1,3 @@
-http://localhost:8000/api/foto
-
 ### Register user1
 POST http://localhost:8000/api/auth/register
 Content-Type: application/json
@@ -22,7 +20,6 @@ Accept: application/json
     "password": "rahasia123"
 }
 
-
 ### Login user1
 POST http://localhost:8000/api/auth/login
 Content-Type: application/json
@@ -43,7 +40,6 @@ Accept: application/json
     "password": "rahasia123"
 }
 
-
 ### Get Detail User
 GET http://localhost:8000/api/user
 Content-Type: application/json
@@ -51,7 +47,6 @@ Accept: application/json
 Authorization: Bearer <token user here>
 
 {}
-
 
 ### Logout User
 DELETE http://localhost:8000/api/auth/logout

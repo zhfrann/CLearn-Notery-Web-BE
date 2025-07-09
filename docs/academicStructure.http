@@ -1,0 +1,49 @@
+### Get All Faculties
+GET http://localhost:8000/api/faculties
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{}
+
+### Get Majors by Faculty ID
+GET http://localhost:8000/api/majors
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{
+  "faculty_id": 7
+}
+
+### Get Semesters by Major ID
+GET http://localhost:8000/api/semesters
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{
+  "major_id": 2
+}
+
+### Get Courses by Major ID and Semester ID (Example 1)
+GET http://localhost:8000/api/courses
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{
+  "major_id": 2,
+  "semester_id": 5
+}
+
+### Get Courses by Major ID and Semester ID (Example 2)
+GET http://localhost:8000/api/courses
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{
+  "major_id": 2,
+  "semester_id": 2
+}
