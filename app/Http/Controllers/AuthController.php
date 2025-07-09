@@ -41,7 +41,8 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => 'student',
             'status_akun' => 'aktif',
-            'foto_profil' => $filename
+            'foto_profil' => $filename,
+            'jumlah_like' => 0
         ]);
 
         return response()->json([
