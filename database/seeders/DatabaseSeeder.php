@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
+            TagSeeder::class,
             FacultySeeder::class,
             FITMajorSeeder::class,
             FITSemesterSeeder::class,
