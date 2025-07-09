@@ -25,6 +25,6 @@ class NoteFile extends Model
 
     public function note(): BelongsTo
     {
-        return $this->belongsTo(Note::class, 'note_id');
+        return $this->belongsTo(Note::class, 'note_id', 'note_id');
     }
 }

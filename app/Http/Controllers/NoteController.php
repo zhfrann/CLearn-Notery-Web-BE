@@ -60,6 +60,7 @@ class NoteController extends Controller
                     return [
                         'nama_file' => $file->nama_file,
                         'path_file' => url(asset('storage/' . $file->path_file)),
+                        'created_at' => $file->created_at->toIso8601String()
                     ];
                 }),
                 'created_at' => $note->created_at->toIso8601String(),
@@ -140,6 +141,7 @@ class NoteController extends Controller
                 $filesData[] = [
                     'nama_file' => $noteFile->nama_file,
                     'path_file' => url(asset('storage/' . $noteFile->path_file)),
+                    'created_at' => $noteFile->created_at->toIso8601String()
                 ];
             }
         }
