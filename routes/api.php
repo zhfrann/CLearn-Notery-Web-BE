@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notes/most-liked-notes', [NoteController::class, 'mostLikeNotes']);
     Route::post('/top-creator', [NoteController::class, 'topCreator']);
 
-    // Route::get('/notes', [NoteController::class, 'getAllNotes']);
+    Route::get('/notes', [NoteController::class, 'getAllNotes']);
     Route::post('/notes', [NoteController::class, 'createNote']);
 
     Route::get('/notes/{id}', [NoteController::class, 'getNoteDetail']);
