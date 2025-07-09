@@ -40,7 +40,8 @@ class User extends Authenticatable
         'faculty_id',
         'matkul_favorit',
         'foto_profil',
-        'rating'
+        // 'rating'
+        'jumlah_like'
     ];
 
     /**

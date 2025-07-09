@@ -24,6 +24,7 @@ class UserResource extends JsonResource
             'role' => $this->role,
             'status_akun' => $this->status_akun,
             'deskripsi' => $this->deskripsi,
+            'jenis_kelamin' => $this->jenis_kelamin,
 
             // 'semester' => new SemesterResource($this->whenLoaded('semester')),
             'semester' => $this->whenLoaded('semester')?->nomor_semester,
@@ -34,12 +35,15 @@ class UserResource extends JsonResource
 
             'matkul_favorit' => $this->matkul_favorit,
             'foto_profil' => $this->foto_profil,
-            'rating' => $this->rating,
+            'jumlah_like' => $this->jumlah_like,
+            // 'rating' => $this->rating,
 
             'foto_profil' =>  url(asset('storage/' . $this->foto_profil)),
 
             // 'notes_jualan' => NoteResource::collection($this->whenLoaded('notes')),
             // 'notes_koleksi' => SavedNoteResource::collection($this->whenLoaded('savedNotes'))
+
+            'created_at' => $this->created_at->toIso8601String()
         ];
     }
 }

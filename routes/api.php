@@ -5,6 +5,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileDataController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -22,9 +23,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return response()->json([
+        'success' => true,
+        'message' => 'Data informasi user.',
+        'data' => new UserResource($request->user()->load(['semester', 'major', 'faculty']))
+    ]);
+});
 
 Route::prefix('/auth')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -67,13 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::put('/notes/{id}/reviews', [ReviewController::class, 'updateReview']);
     // Route::delete('/notes/{id}/reviews', [ReviewController::class, 'deleteReview']);
 
-    // Route::get('/user', function (Request $request) {
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Data informasi user.',
-    //         'data' => $request->user()
-    //     ]);
-    // });
+
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);
     //     // Route::get(/{id}/reviews, [...]);

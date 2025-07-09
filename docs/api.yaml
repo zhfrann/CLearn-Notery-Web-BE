@@ -10,6 +10,8 @@ tags:
     description: Authentication functionality
   - name: user
     description: Operations about user
+  - name: note
+    description: Note functionality
 paths:
   /auth/register:
     post:
@@ -202,7 +204,6 @@ paths:
                     type: boolean
                   message:
                     type: string
-
   /auth/logout:
     delete:
       tags:
@@ -246,3 +247,74 @@ paths:
                   description: Tidak terautentikasi
                   value:
                     message: "Unauthenticated."
+
+  /profile:
+    get:
+      tags:
+        - user
+      summary: Get user detail
+      description: Get user detail
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Token yang dimiliki user setelah login
+          schema:
+            type: string
+            properties:
+              Authorization:
+                type: string
+      responses:
+    put:
+      tags:
+        - user
+      summary: Update user detail
+      description: Update user detail
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Token yang dimiliki user setelah login
+          schema:
+            type: string
+            properties:
+              Authorization:
+                type: string
+      requestBody:
+        description: New user data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nama:
+                  type: string
+                email:
+                  type: string
+                faculty:
+                  type: string
+                major:
+                  type: string
+                semester:
+                  type: string
+      responses:
+
+  /profile/photo:
+    get:
+      tags:
+        - user
+      summary: Get user detail
+      description: Get user detail information
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer Token yang dimiliki user setelah login
+          schema:
+            type: string
+            properties:
+              Authorization:
+                type: string
+      responses:
+
+
