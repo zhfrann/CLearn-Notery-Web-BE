@@ -1,0 +1,10 @@
+### Get Note Terbaru (Beranda - Update Saat Ini)
+GET http://localhost:8000/api/notes/latest-notes
+Accept: application/json
+Authorization: Bearer <token user here>
+
+
+### Get Note Paling Banyak Disukai (Beranda - Paling Banyak Disukai)
+GET http://localhost:8000/api/notes/most-liked-notes
+Accept: application/json
+Authorization: Bearer <token user here>
