@@ -53,7 +53,7 @@ class NoteSeeder extends Seeder
 
             NoteStatus::create([
                 'note_id' => $note->note_id,
-                'status' => 'menunggu',
+                'status' => 'diterima',
             ]);
 
             // Masukkan file acak (1–3 file)

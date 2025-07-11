@@ -39,6 +39,7 @@ class NoteController extends Controller
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
                 'harga' => $note->harga,
+                'status' => $note->noteStatus->status,
                 'jumlah_like' => $note->jumlah_like,
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
@@ -82,9 +83,11 @@ class NoteController extends Controller
 
     public function latestNotes(Request $request)
     {
-        $notes = Note::with(['noteTags.tag', 'savedByUsers', 'reviews'])->withCount(['transactions as jumlah_terjual' => function ($query) {
-            $query->where('status', 'success');
-        }])
+        $notes = Note::approved()
+            ->with(['noteTags.tag', 'savedByUsers', 'reviews'])
+            ->withCount(['transactions as jumlah_terjual' => function ($query) {
+                $query->where('status', 'success');
+            }])
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($note) {
@@ -120,7 +123,8 @@ class NoteController extends Controller
 
     public function mostLikeNotes(Request $request)
     {
-        $notes = Note::with(['noteTags.tag', 'savedByUsers', 'reviews'])
+        $notes = Note::approved()
+            ->with(['noteTags.tag', 'savedByUsers', 'reviews'])
             ->withCount(['transactions as jumlah_terjual' => function ($query) {
                 $query->where('status', 'success');
             }])
