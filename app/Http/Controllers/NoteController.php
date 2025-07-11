@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Note;
 use App\Models\NoteFile;
+use App\Models\NoteStatus;
 use App\Models\NoteTag;
 use App\Models\Tag;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -192,6 +193,11 @@ class NoteController extends Controller
             'jumlah_dikunjungi' => 0,
         ]);
 
+        $noteStatus = NoteStatus::query()->create([
+            'note_id' => $note->note_id,
+            'status' => 'menunggu',
+        ]);
+
         // 2. Simpan tags (NoteTag)
         foreach ($validated['tag_id'] as $tagId) {
             NoteTag::query()->create([
@@ -264,6 +270,7 @@ class NoteController extends Controller
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
                 'harga' => $note->harga,
+                'status' => $noteStatus->status,
                 'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                 'fakultas' => [
                     'id' => $faculty->faculty_id,
@@ -296,6 +303,8 @@ class NoteController extends Controller
     }
 
     public function getNoteDetail(Request $request, string $id) {}
+
+    public function getReviews(Request $request, string $id) {}
 
     public function addLikeNote(Request $request, string $id) {}
 
