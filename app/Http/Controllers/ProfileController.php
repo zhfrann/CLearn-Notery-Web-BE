@@ -25,8 +25,8 @@ class ProfileController extends Controller
                     'note_id' => $note->note_id,
                     'seller' => [
                         'seller_id' => $note->seller_id,
-                        'seller_name' => $note->seller->name,
-                        'seller_username' => $note->seller->username,
+                        'name' => $note->seller->name,
+                        'username' => $note->seller->username,
                     ],
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
@@ -52,8 +52,8 @@ class ProfileController extends Controller
                     'note_id' => $note->note_id,
                     'seller' => [
                         'seller_id' => $note->seller_id,
-                        'seller_name' => $note->seller->name,
-                        'seller_username' => $note->seller->username,
+                        'name' => $note->seller->name,
+                        'username' => $note->seller->username,
                     ],
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
@@ -79,8 +79,8 @@ class ProfileController extends Controller
                     'note_id' => $note->note_id,
                     'seller' => [
                         'seller_id' => $note->seller_id,
-                        'seller_name' => $note->seller->name,
-                        'seller_username' => $note->seller->username,
+                        'name' => $note->seller->name,
+                        'username' => $note->seller->username,
                     ],
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
