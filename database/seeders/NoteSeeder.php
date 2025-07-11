@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Note;
 use App\Models\NoteFile;
 use App\Models\NoteTag;
+use App\Models\NoteStatus;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -48,6 +49,11 @@ class NoteSeeder extends Seeder
                 'jumlah_like' => rand(5, 100),
                 'jumlah_dikunjungi' => rand(100, 1000),
                 'gambar_preview' => $preview,
+            ]);
+
+            NoteStatus::create([
+                'note_id' => $note->note_id,
+                'status' => 'menunggu',
             ]);
 
             // Masukkan file acak (1–3 file)
