@@ -40,6 +40,26 @@ Accept: application/json
     "password": "rahasia123"
 }
 
+### Login evan_john
+POST http://localhost:8000/api/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+    "username": "evan_john",
+    "password": "rahasia123"
+}
+
+### Login e_khansa
+POST http://localhost:8000/api/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+    "username": "e_khansa",
+    "password": "rahasia123"
+}
+
 ### Get Detail User
 GET http://localhost:8000/api/user
 Content-Type: application/json
