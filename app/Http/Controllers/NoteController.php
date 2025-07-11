@@ -30,6 +30,11 @@ class NoteController extends Controller
 
             return [
                 'note_id' => $note->note_id,
+                'seller' => [
+                    'seller_id' => $note->seller_id,
+                    'seller_name' => $note->seller->name,
+                    'seller_username' => $note->seller->username,
+                ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
                 'harga' => $note->harga,
@@ -84,6 +89,11 @@ class NoteController extends Controller
             ->map(function ($note) {
                 return [
                     'note_id' => $note->note_id,
+                    'seller' => [
+                        'seller_id' => $note->seller_id,
+                        'seller_name' => $note->seller->name,
+                        'seller_username' => $note->seller->username,
+                    ],
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
                     'harga' => $note->harga,
@@ -118,6 +128,11 @@ class NoteController extends Controller
             ->map(function ($note) {
                 return [
                     'note_id' => $note->note_id,
+                    'seller' => [
+                        'seller_id' => $note->seller_id,
+                        'seller_name' => $note->seller->name,
+                        'seller_username' => $note->seller->username,
+                    ],
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
                     'harga' => $note->harga,
@@ -241,6 +256,11 @@ class NoteController extends Controller
             'message' => 'Berhasil membuat note',
             'data' => [
                 'note_id' => $note->note_id,
+                'seller' => [
+                    'seller_id' => $note->seller_id,
+                    'seller_name' => $note->seller->name,
+                    'seller_username' => $note->seller->username,
+                ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
                 'harga' => $note->harga,
