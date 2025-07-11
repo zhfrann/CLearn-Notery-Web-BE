@@ -44,6 +44,10 @@ or you can run the seeder to seed initial data
 php artisan migrate --seed
 ```
 
+> [!NOTE]  
+> Unzip rar file in ./storage/app/public/dummy-data.rar
+> You have to do this because it's contain profiles, notes, and default thumbnail images for dummy data
+
 Make symbolic link for storage
 
 ```bash
