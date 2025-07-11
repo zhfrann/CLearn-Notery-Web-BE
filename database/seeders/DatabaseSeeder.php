@@ -24,13 +24,13 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
+            UserSeeder::class,
             TagSeeder::class,
             FacultySeeder::class,
             FITMajorSeeder::class,
             FITSemesterSeeder::class,
             DIFCourseSeeder::class,
-
-
+            NoteSeeder::class,
         ]);
     }
 }
