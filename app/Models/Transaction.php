@@ -20,7 +20,7 @@ class Transaction extends Model
     protected $fillable = [
         'note_id',
         'buyer_id',
-        'status_pembayaran',
+        'status',
         'tgl_transaksi',
         'catatan'
     ];

@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             FITSemesterSeeder::class,
             DIFCourseSeeder::class,
             NoteSeeder::class,
+            InteractionSeeder::class,
         ]);
     }
 }

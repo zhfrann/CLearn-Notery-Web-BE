@@ -41,7 +41,8 @@ class User extends Authenticatable
         'matkul_favorit',
         'foto_profil',
         // 'rating'
-        'jumlah_like'
+        'jumlah_like',
+        'qr_code'
     ];
 
     /**
