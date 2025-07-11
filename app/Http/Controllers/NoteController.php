@@ -36,7 +36,7 @@ class NoteController extends Controller
                 'jumlah_like' => $note->jumlah_like,
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
-                'gambar_preview' => $note->gambar_preview ? url($note->gambar_preview) : asset('images/default_preview.png'),
+                'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                 'fakultas' => $faculty ? [
                     'id' => $faculty->faculty_id,
                     'nama' => $faculty->nama_fakultas,
@@ -74,9 +74,72 @@ class NoteController extends Controller
         ]);
     }
 
-    public function latestNotes(Request $request) {}
+    public function latestNotes(Request $request)
+    {
+        $notes = Note::with(['noteTags.tag', 'savedByUsers', 'reviews'])->withCount(['transactions as jumlah_terjual' => function ($query) {
+            $query->where('status', 'success');
+        }])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($note) {
+                return [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'deskripsi' => $note->deskripsi,
+                    'harga' => $note->harga,
+                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_favorit' => $note->savedByUsers->count(),
+                    'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
+                    'jumlah_terjual' => $note->jumlah_terjual,
+                    'rating' => round($note->reviews->avg('rating') ?? 0, 2),
+                    'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
+                    'tags' => $note->noteTags->map(function ($noteTag) {
+                        return $noteTag->tag->nama_tag ?? null;
+                    })->filter()->values(),
+                    'created_at' => $note->created_at->toIso8601String(),
+                ];
+            });
 
-    public function mostLikeNotes(Request $request) {}
+        return response()->json([
+            'success' => true,
+            'message' => 'Note terbaru',
+            'data' => $notes,
+        ]);
+    }
+
+    public function mostLikeNotes(Request $request)
+    {
+        $notes = Note::with(['noteTags.tag', 'savedByUsers', 'reviews'])
+            ->withCount(['transactions as jumlah_terjual' => function ($query) {
+                $query->where('status', 'success');
+            }])
+            ->orderByDesc('jumlah_like')
+            ->get()
+            ->map(function ($note) {
+                return [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'deskripsi' => $note->deskripsi,
+                    'harga' => $note->harga,
+                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_favorit' => $note->savedByUsers->count(),
+                    'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
+                    'jumlah_terjual' => $note->jumlah_terjual,
+                    'rating' => round($note->reviews->avg('rating') ?? 0, 2),
+                    'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
+                    'tags' => $note->noteTags->map(function ($noteTag) {
+                        return $noteTag->tag->nama_tag ?? null;
+                    })->filter()->values(),
+                    'created_at' => $note->created_at->toIso8601String(),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note paling banyak disukai',
+            'data' => $notes,
+        ]);
+    }
 
     public function topCreator(Request $request) {}
 
@@ -140,7 +203,7 @@ class NoteController extends Controller
                 ]);
                 $filesData[] = [
                     'nama_file' => $noteFile->nama_file,
-                    'path_file' => url(asset('storage/' . $noteFile->path_file)),
+                    'path_file' => $noteFile->path_file,
                     'created_at' => $noteFile->created_at->toIso8601String()
                 ];
             }
@@ -156,7 +219,7 @@ class NoteController extends Controller
         }
         if (!$gambarPreview) {
             // Set gambar default jika tidak ada gambar
-            $gambarPreview = asset('images/default_preview.png');
+            $gambarPreview = 'images/default_preview.png';
         }
 
         // Update kolom gambar_preview di tabel notes
@@ -181,7 +244,7 @@ class NoteController extends Controller
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
                 'harga' => $note->harga,
-                'gambar_preview' => $note->gambar_preview ? url($note->gambar_preview) : asset('images/default_preview.png'),
+                'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                 'fakultas' => [
                     'id' => $faculty->faculty_id,
                     'nama' => $faculty->nama_fakultas,
@@ -199,7 +262,14 @@ class NoteController extends Controller
                     'nama' => $course->nama_mk,
                 ],
                 'tags' => $tags,
-                'files' => $filesData,
+                // 'files' => $filesData,
+                'files' => collect($filesData)->map(function ($file) {
+                    return [
+                        'nama_file' => $file['nama_file'],
+                        'path_file' => url('storage/' . $file['path_file']),
+                        'created_at' => $file['created_at']
+                    ];
+                }),
                 'created_at' => $note->created_at->toIso8601String(),
             ]
         ]);
