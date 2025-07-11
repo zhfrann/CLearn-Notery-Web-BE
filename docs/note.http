@@ -51,3 +51,26 @@ Content-Type: image/png
 
 < E:/Telkom University/Nilai EPrT 2023.pdf
 --boundary--
+
+
+
+### Get Notes on Profile
+GET http://localhost:8000/api/profile/notes
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer <token user here>
+
+{}
+
+
+
+
+### Get All Notes
+GET http://localhost:8000/api/notes
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer <token user here>
+
+{}
+
+
