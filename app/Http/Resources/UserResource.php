@@ -34,7 +34,7 @@ class UserResource extends JsonResource
             'faculty' => $this->whenLoaded('faculty')?->nama_fakultas,
 
             'matkul_favorit' => $this->matkul_favorit,
-            'foto_profil' => $this->foto_profil,
+            // 'foto_profil' => $this->foto_profil,
             'jumlah_like' => $this->jumlah_like,
             // 'rating' => $this->rating,
 
