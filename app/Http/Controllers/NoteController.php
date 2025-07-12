@@ -356,7 +356,15 @@ class NoteController extends Controller
     public function likeNote(Request $request, string $id)
     {
         $user = auth()->user();
-        $note = Note::query()->findOrFail($id);
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
 
         // Cek apakah user sudah like note ini
         $alreadyLiked = $note->likes()->where('user_id', $user->id)->exists();
@@ -391,7 +399,15 @@ class NoteController extends Controller
     public function unlikeNote(Request $request, string $id)
     {
         $user = auth()->user();
-        $note = Note::query()->findOrFail($id);
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
 
         $like = $note->likes()->where('user_id', $user->user_id)->first();
 
@@ -423,7 +439,15 @@ class NoteController extends Controller
     public function addFavoriteNote(Request $request, string $id)
     {
         $user = auth()->user();
-        $note = Note::query()->findOrFail($id);
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
 
         // Cek apakah sudah favorit
         $alreadyFavorited = $note->savedByUsers()->where('user_id', $user->user_id)->exists();
@@ -457,7 +481,15 @@ class NoteController extends Controller
     public function removeFavoriteNote(Request $request, string $id)
     {
         $user = auth()->user();
-        $note = Note::query()->findOrFail($id);
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
 
         $favorite = $note->savedByUsers()->where('user_id', $user->user_id)->first();
 
