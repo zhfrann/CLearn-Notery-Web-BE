@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Note;
 use App\Models\NoteFile;
+use App\Models\NoteLike;
 use App\Models\NoteTag;
 use App\Models\NoteStatus;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -26,9 +28,9 @@ class NoteSeeder extends Seeder
         ];
 
         $sampleFiles = [
-            ['nama_file' => 'Materi-Kalkulus.pdf', 'path_file' => 'notes/files/note3.png'],
-            ['nama_file' => 'Modul-Jaringan.docx', 'path_file' => 'notes/files/note4.png'],
-            ['nama_file' => 'Struktur-Data.pdf', 'path_file' => 'notes/files/note1.png'],
+            ['nama_file' => 'Materi-Kalkulus.png', 'path_file' => 'notes/files/note3.png'],
+            ['nama_file' => 'Modul-Jaringan.png', 'path_file' => 'notes/files/note4.png'],
+            ['nama_file' => 'Struktur-Data.png', 'path_file' => 'notes/files/note1.png'],
             ['nama_file' => 'Algoritma-Coding.png', 'path_file' => 'notes/files/note2.png'],
         ];
 
@@ -46,7 +48,7 @@ class NoteSeeder extends Seeder
                 'judul' => $judul,
                 'deskripsi' => $deskripsi,
                 'harga' => $harga,
-                'jumlah_like' => rand(5, 100),
+                // 'jumlah_like' => rand(5, 100),
                 'jumlah_dikunjungi' => rand(100, 1000),
                 'gambar_preview' => $preview,
             ]);
