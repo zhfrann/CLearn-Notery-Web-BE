@@ -15,86 +15,50 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        // Notes yang dijual user
+        // Helper untuk format data note
+        $formatNote = function ($note) {
+            return [
+                'note_id' => $note->note_id,
+                'seller' => [
+                    'seller_id' => $note->seller->user_id ?? $note->seller_id,
+                    'name' => $note->seller->nama ?? null,
+                    'username' => $note->seller->username ?? null,
+                ],
+                'judul' => $note->judul,
+                'deskripsi' => $note->deskripsi,
+                'harga' => $note->harga,
+                'jumlah_like' => $note->jumlah_like,
+                'jumlah_favorit' => $note->savedByUsers->count(),
+                'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
+                'jumlah_terjual' => $note->transactions->where('status', 'success')->count(),
+                'rating' => round($note->reviews->avg('rating') ?? 0, 2),
+                'gambar_preview' => asset('storage/' . $note->gambar_preview),
+                'tags' => $note->noteTags->pluck('tag.nama_tag'),
+                'created_at' => $note->created_at->toIso8601String(),
+            ];
+        };
+
+        // Notes dijual oleh user (note status harus diterima)
         $notesDijual = $user->notes()
-            ->with(['noteTags.tag'])
-            ->withCount('transactions')
+            ->whereHas('noteStatus', fn($q) => $q->where('status', 'diterima'))
+            ->with(['seller', 'noteTags.tag', 'reviews', 'savedByUsers', 'transactions'])
             ->get()
-            ->map(function ($note) {
-                return [
-                    'note_id' => $note->note_id,
-                    'seller' => [
-                        'seller_id' => $note->seller_id,
-                        'name' => $note->seller->name,
-                        'username' => $note->seller->username,
-                    ],
-                    'judul' => $note->judul,
-                    'deskripsi' => $note->deskripsi,
-                    'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
-                    'jumlah_favorit' => $note->savedByUsers->count(),
-                    'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
-                    'jumlah_terjual' => $note->transactions_count,
-                    'rating' => round($note->reviews->avg('rating') ?? 0, 2),
-                    'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
-                    'tags' => $note->noteTags->pluck('tag.nama_tag'),
-                    'created_at' => $note->created_at->toIso8601String(),
-                ];
-            });
+            ->map($formatNote);
 
-        // Notes yang dibeli user
+        // Notes dibeli oleh user (hanya transaksi yang success dan note diterima)
         $notesDibeli = Transaction::where('buyer_id', $user->user_id)
-            ->with(['note.noteTags.tag', 'note.reviews', 'note.savedByUsers', 'note.transactions'])
+            ->where('status', 'success')
+            ->whereHas('note.noteStatus', fn($q) => $q->where('status', 'diterima'))
+            ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.savedByUsers', 'note.transactions'])
             ->get()
-            ->map(function ($transaction) {
-                $note = $transaction->note;
-                return [
-                    'note_id' => $note->note_id,
-                    'seller' => [
-                        'seller_id' => $note->seller_id,
-                        'name' => $note->seller->name,
-                        'username' => $note->seller->username,
-                    ],
-                    'judul' => $note->judul,
-                    'deskripsi' => $note->deskripsi,
-                    'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
-                    'jumlah_favorit' => $note->savedByUsers->count(),
-                    'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
-                    'jumlah_terjual' => $note->transactions->count(),
-                    'rating' => round($note->reviews->avg('rating') ?? 0, 2),
-                    'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
-                    'tags' => $note->noteTags->pluck('tag.nama_tag'),
-                    'created_at' => $note->created_at->toIso8601String(),
-                ];
-            });
+            ->map(fn($tx) => $formatNote($tx->note));
 
-        // Notes yang difavoritkan user (saved notes)
+        // Notes difavoritkan user (saved_notes), hanya note yang diterima
         $favoriteNotes = $user->savedNotes()
-            ->with(['note.noteTags.tag', 'note.reviews', 'note.savedByUsers', 'note.transactions'])
+            ->whereHas('note.noteStatus', fn($q) => $q->where('status', 'diterima'))
+            ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.savedByUsers', 'note.transactions'])
             ->get()
-            ->map(function ($saved) {
-                $note = $saved->note;
-                return [
-                    'note_id' => $note->note_id,
-                    'seller' => [
-                        'seller_id' => $note->seller_id,
-                        'name' => $note->seller->name,
-                        'username' => $note->seller->username,
-                    ],
-                    'judul' => $note->judul,
-                    'deskripsi' => $note->deskripsi,
-                    'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
-                    'jumlah_favorit' => $note->savedByUsers->count(),
-                    'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
-                    'jumlah_terjual' => $note->transactions->count(),
-                    'rating' => round($note->reviews->avg('rating') ?? 0, 1),
-                    'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
-                    'tags' => $note->noteTags->pluck('tag.nama_tag'),
-                    'created_at' => $note->created_at->toIso8601String(),
-                ];
-            });
+            ->map(fn($saved) => $formatNote($saved->note));
 
         return response()->json([
             'success' => true,

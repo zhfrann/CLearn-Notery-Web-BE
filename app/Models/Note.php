@@ -70,4 +70,11 @@ class Note extends Model
     {
         return $this->hasOne(NoteStatus::class, 'note_id', 'note_id');
     }
+
+    public function scopeApproved($query)
+    {
+        return $query->whereHas('noteStatus', function ($q) {
+            $q->where('status', 'diterima');
+        });
+    }
 }
