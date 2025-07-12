@@ -41,7 +41,7 @@ class NoteController extends Controller
                 'deskripsi' => $note->deskripsi,
                 'harga' => $note->harga,
                 'status' => $note->noteStatus->status,
-                'jumlah_like' => $note->jumlah_like,
+                'jumlah_like' => $note->likes()->count(),
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                 'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
@@ -102,7 +102,7 @@ class NoteController extends Controller
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
                     'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_like' => $note->likes()->count(),
                     'jumlah_favorit' => $note->savedByUsers->count(),
                     'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                     'jumlah_terjual' => $note->jumlah_terjual,
@@ -142,7 +142,7 @@ class NoteController extends Controller
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
                     'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_like' => $note->likes()->count(),
                     'jumlah_favorit' => $note->savedByUsers->count(),
                     'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                     'jumlah_terjual' => $note->jumlah_terjual,
@@ -333,7 +333,7 @@ class NoteController extends Controller
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
                     'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_like' => $note->likes()->count(),
                     'jumlah_favorit' => $note->saved_by_users_count,
                     'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                     'jumlah_terjual' => $note->transactions_count,
@@ -353,9 +353,170 @@ class NoteController extends Controller
 
     public function getReviews(Request $request, string $id) {}
 
-    public function addLikeNote(Request $request, string $id) {}
+    public function likeNote(Request $request, string $id)
+    {
+        $user = auth()->user();
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
 
-    public function addFavoriteNote(Request $request, string $id) {}
+        // Cek apakah user sudah like note ini
+        $alreadyLiked = $note->likes()->where('user_id', $user->user_id)->exists();
+        if ($alreadyLiked) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu sudah like note ini.',
+                'data' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'total_like' => $note->likes()->count(),
+                ]
+            ], 200);
+        }
+
+        // Simpan like
+        $note->likes()->create([
+            'user_id' => $user->user_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menambah like note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'total_like' => $note->likes()->count(),
+            ]
+        ], 201);
+    }
+
+    public function unlikeNote(Request $request, string $id)
+    {
+        $user = auth()->user();
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
+
+        $like = $note->likes()->where('user_id', $user->user_id)->first();
+
+        if (!$like) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu belum like note ini.',
+                'data' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'total_like' => $note->likes()->count(),
+                ]
+            ], 200);
+        }
+
+        $like->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menghapus like note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'total_like' => $note->likes()->count(),
+            ]
+        ], 200);
+    }
+
+    public function addFavoriteNote(Request $request, string $id)
+    {
+        $user = auth()->user();
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
+
+        // Cek apakah sudah favorit
+        $alreadyFavorited = $note->savedByUsers()->where('user_id', $user->user_id)->exists();
+        if ($alreadyFavorited) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note sudah ada di favorit.',
+                'data' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'total_favorite' => $note->savedByUsers()->count(),
+                ]
+            ], 200);
+        }
+
+        $note->savedByUsers()->create([
+            'user_id' => $user->user_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menambah favorit note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'total_favorite' => $note->savedByUsers()->count(),
+            ]
+        ], 201);
+    }
+
+    public function removeFavoriteNote(Request $request, string $id)
+    {
+        $user = auth()->user();
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+                'data' => null
+            ], 404);
+        }
+
+        $favorite = $note->savedByUsers()->where('user_id', $user->user_id)->first();
+
+        if (!$favorite) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note belum ada di favorit.',
+                'data' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'total_favorite' => $note->savedByUsers()->count(),
+                ]
+            ], 200);
+        }
+
+        $favorite->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menghapus favorit note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'total_favorite' => $note->savedByUsers()->count(),
+            ]
+        ], 200);
+    }
 
     public function updateNote(Request $request, string $id) {}
 

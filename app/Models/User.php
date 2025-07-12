@@ -158,4 +158,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Course::class, 'matkul_favorit', 'course_id');
     }
+
+    public function likedNotes(): HasMany
+    {
+        return $this->hasMany(NoteLike::class, 'user_id', 'user_id');
+    }
 }

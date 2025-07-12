@@ -95,3 +95,36 @@ Authorization: Bearer <token user here>
 {}
 
 
+
+
+### Like a Note
+POST http://localhost:8000/api/notes/12/like
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{}
+
+### Unlike a Note
+DELETE http://localhost:8000/api/notes/12/like
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{}
+
+### Add Note to Favorite
+POST http://localhost:8000/api/notes/12/favorite
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{}
+
+### Remove Note from Favorite
+DELETE http://localhost:8000/api/notes/12/favorite
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{}
