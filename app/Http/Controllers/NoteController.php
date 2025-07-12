@@ -353,7 +353,72 @@ class NoteController extends Controller
 
     public function getReviews(Request $request, string $id) {}
 
-    public function addLikeNote(Request $request, string $id) {}
+    public function likeNote(Request $request, string $id)
+    {
+        $user = auth()->user();
+        $note = Note::query()->findOrFail($id);
+
+        // Cek apakah user sudah like note ini
+        $alreadyLiked = $note->likes()->where('user_id', $user->id)->exists();
+        if ($alreadyLiked) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu sudah like note ini.',
+                'data' => [
+                    'note_id' => $note->id,
+                    'judul' => $note->title,
+                    'total_like' => $note->likes()->count(),
+                ]
+            ], 200);
+        }
+
+        // Simpan like
+        $note->likes()->create([
+            'user_id' => $user->user_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menambah like note',
+            'data' => [
+                'note_id' => $note->id,
+                'judul' => $note->title,
+                'total_like' => $note->likes()->count(),
+            ]
+        ], 201);
+    }
+
+    public function unlikeNote(Request $request, string $id)
+    {
+        $user = auth()->user();
+        $note = Note::query()->findOrFail($id);
+
+        $like = $note->likes()->where('user_id', $user->user_id)->first();
+
+        if (!$like) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu belum like note ini.',
+                'data' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'total_like' => $note->likes()->count(),
+                ]
+            ], 200);
+        }
+
+        $like->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menghapus like note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'total_like' => $note->likes()->count(),
+            ]
+        ], 200);
+    }
 
     public function addFavoriteNote(Request $request, string $id) {}
 

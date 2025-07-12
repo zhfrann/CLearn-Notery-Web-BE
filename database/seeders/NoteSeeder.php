@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Note;
 use App\Models\NoteFile;
+use App\Models\NoteLike;
 use App\Models\NoteTag;
 use App\Models\NoteStatus;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -46,10 +48,23 @@ class NoteSeeder extends Seeder
                 'judul' => $judul,
                 'deskripsi' => $deskripsi,
                 'harga' => $harga,
-                'jumlah_like' => rand(5, 100),
+                // 'jumlah_like' => rand(5, 100),
                 'jumlah_dikunjungi' => rand(100, 1000),
                 'gambar_preview' => $preview,
             ]);
+
+            $allUserIds = User::query()->pluck('user_id')->toArray();
+            $likeUserIds = collect($allUserIds)
+                ->filter(fn($uid) => $uid != $seller) // seller tidak like catatan sendiri
+                ->shuffle()
+                ->take(rand(1, 5)); // random 1-5 user like
+
+            foreach ($likeUserIds as $userId) {
+                NoteLike::create([
+                    'note_id' => $note->note_id,
+                    'user_id' => $userId,
+                ]);
+            }
 
             NoteStatus::create([
                 'note_id' => $note->note_id,
