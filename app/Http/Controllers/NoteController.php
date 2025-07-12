@@ -420,7 +420,71 @@ class NoteController extends Controller
         ], 200);
     }
 
-    public function addFavoriteNote(Request $request, string $id) {}
+    public function addFavoriteNote(Request $request, string $id)
+    {
+        $user = auth()->user();
+        $note = Note::query()->findOrFail($id);
+
+        // Cek apakah sudah favorit
+        $alreadyFavorited = $note->savedByUsers()->where('user_id', $user->user_id)->exists();
+        if ($alreadyFavorited) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note sudah ada di favorit.',
+                'data' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'total_favorite' => $note->savedByUsers()->count(),
+                ]
+            ], 200);
+        }
+
+        $note->savedByUsers()->create([
+            'user_id' => $user->user_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menambah favorit note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'total_favorite' => $note->savedByUsers()->count(),
+            ]
+        ], 201);
+    }
+
+    public function removeFavoriteNote(Request $request, string $id)
+    {
+        $user = auth()->user();
+        $note = Note::query()->findOrFail($id);
+
+        $favorite = $note->savedByUsers()->where('user_id', $user->user_id)->first();
+
+        if (!$favorite) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note belum ada di favorit.',
+                'data' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                    'total_favorite' => $note->savedByUsers()->count(),
+                ]
+            ], 200);
+        }
+
+        $favorite->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menghapus favorit note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'total_favorite' => $note->savedByUsers()->count(),
+            ]
+        ], 200);
+    }
 
     public function updateNote(Request $request, string $id) {}
 

@@ -67,8 +67,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/notes/{id}', [NoteController::class, 'getNoteDetail']);
     Route::get('/notes/{id}/reviews', [NoteController::class, 'getReviews']);
-    Route::post('/notes/{id}/like', [NoteController::class, 'addLikeNote']);
+    Route::post('/notes/{id}/like', [NoteController::class, 'likeNote']);
+    Route::delete('/notes/{id}/like', [NoteController::class, 'unlikeNote']);
     Route::post('/notes/{id}/favorite', [NoteController::class, 'addFavoriteNote']);
+    Route::post('/notes/{id}/favorite', [NoteController::class, 'removeFavoriteNote']);
 
     Route::put('/notes/{id}', [NoteController::class, 'updateNote']);
     // Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);
