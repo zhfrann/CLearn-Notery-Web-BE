@@ -28,9 +28,9 @@ class NoteSeeder extends Seeder
         ];
 
         $sampleFiles = [
-            ['nama_file' => 'Materi-Kalkulus.pdf', 'path_file' => 'notes/files/note3.png'],
-            ['nama_file' => 'Modul-Jaringan.docx', 'path_file' => 'notes/files/note4.png'],
-            ['nama_file' => 'Struktur-Data.pdf', 'path_file' => 'notes/files/note1.png'],
+            ['nama_file' => 'Materi-Kalkulus.png', 'path_file' => 'notes/files/note3.png'],
+            ['nama_file' => 'Modul-Jaringan.png', 'path_file' => 'notes/files/note4.png'],
+            ['nama_file' => 'Struktur-Data.png', 'path_file' => 'notes/files/note1.png'],
             ['nama_file' => 'Algoritma-Coding.png', 'path_file' => 'notes/files/note2.png'],
         ];
 
@@ -52,19 +52,6 @@ class NoteSeeder extends Seeder
                 'jumlah_dikunjungi' => rand(100, 1000),
                 'gambar_preview' => $preview,
             ]);
-
-            $allUserIds = User::query()->pluck('user_id')->toArray();
-            $likeUserIds = collect($allUserIds)
-                ->filter(fn($uid) => $uid != $seller) // seller tidak like catatan sendiri
-                ->shuffle()
-                ->take(rand(1, 5)); // random 1-5 user like
-
-            foreach ($likeUserIds as $userId) {
-                NoteLike::create([
-                    'note_id' => $note->note_id,
-                    'user_id' => $userId,
-                ]);
-            }
 
             NoteStatus::create([
                 'note_id' => $note->note_id,
