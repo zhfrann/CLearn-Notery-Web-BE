@@ -8,6 +8,7 @@ use App\Models\NoteFile;
 use App\Models\NoteStatus;
 use App\Models\NoteTag;
 use App\Models\Tag;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -306,7 +307,49 @@ class NoteController extends Controller
         ]);
     }
 
-    public function getNoteDetail(Request $request, string $id) {}
+    public function getNoteDetail(Request $request, string $id)
+    {
+        try {
+            $note = Note::with(['noteTags.tag', 'seller'])
+                ->withCount(['savedByUsers', 'transactions'])
+                ->withAvg('reviews', 'rating')
+                ->findOrFail($id);
+
+            // Tambahkan kunjungan
+            $note->increment('jumlah_dikunjungi', 1);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Detail note',
+                'data' => [
+                    'note_id' => $note->note_id,
+                    'seller' => [
+                        'seller_id' => $note->seller->user_id,
+                        'name' => $note->seller->nama,
+                        'username' => $note->seller->username,
+                        'foto_profil' => url($note->seller->foto_profil_url),
+                        'isTopCreator' => null, //TODO Implement isTopCreator logic
+                    ],
+                    'judul' => $note->judul,
+                    'deskripsi' => $note->deskripsi,
+                    'harga' => $note->harga,
+                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_favorit' => $note->saved_by_users_count,
+                    'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
+                    'jumlah_terjual' => $note->transactions_count,
+                    'rating' => round($note->reviews_avg_rating ?? 0, 2),
+                    'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
+                    'tags' => $note->noteTags->pluck('tag.nama_tag'),
+                    'created_at' => $note->created_at->toIso8601String(),
+                ]
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+            ], 404);
+        }
+    }
 
     public function getReviews(Request $request, string $id) {}
 
