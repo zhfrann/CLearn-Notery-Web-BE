@@ -17,14 +17,19 @@ class NoteController extends Controller
 {
     public function getAllNotes(Request $request)
     {
+        $user = $request->user();
         $notes = Note::with([
             'course.major.faculty',
             'course.semester',
             'noteTags.tag',
-            'files'
+            'files',
+            'likes',
+            'savedByUsers',
+            'transactions',
+            'reviews',
         ])->get();
 
-        $result = $notes->map(function ($note) {
+        $result = $notes->map(function ($note) use ($user) {
             $course = $note->course;
             $major = $course->major ?? null;
             $faculty = $major ? $major->faculty : null;
@@ -36,6 +41,8 @@ class NoteController extends Controller
                     'seller_id' => $note->seller_id,
                     'name' => $note->seller->name,
                     'username' => $note->seller->username,
+                    'foto_profil' => url($note->seller->foto_profil_url),
+                    'isTopCreator' => null,
                 ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
@@ -44,7 +51,9 @@ class NoteController extends Controller
                 'jumlah_like' => $note->likes()->count(),
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
+                'jumlah_terjual' => $note->transactions->where('status', 'success')->count(),
                 'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
+                'rating' => round($note->reviews->avg('rating') ?? 0, 2),
                 'fakultas' => $faculty ? [
                     'id' => $faculty->faculty_id,
                     'nama' => $faculty->nama_fakultas,
@@ -71,6 +80,8 @@ class NoteController extends Controller
                         'created_at' => $file->created_at->toIso8601String()
                     ];
                 }),
+                'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
+                'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
                 'created_at' => $note->created_at->toIso8601String(),
             ];
         });
@@ -84,20 +95,23 @@ class NoteController extends Controller
 
     public function latestNotes(Request $request)
     {
+        $user = $request->user();
         $notes = Note::approved()
-            ->with(['noteTags.tag', 'savedByUsers', 'reviews'])
+            ->with(['noteTags.tag', 'savedByUsers', 'reviews', 'likes', 'savedByUsers', 'transactions'])
             ->withCount(['transactions as jumlah_terjual' => function ($query) {
                 $query->where('status', 'success');
             }])
             ->orderByDesc('created_at')
             ->get()
-            ->map(function ($note) {
+            ->map(function ($note) use ($user) {
                 return [
                     'note_id' => $note->note_id,
                     'seller' => [
                         'seller_id' => $note->seller_id,
                         'name' => $note->seller->name,
                         'username' => $note->seller->username,
+                        'foto_profil' => url($note->seller->foto_profil_url),
+                        'isTopCreator' => null,
                     ],
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
@@ -111,6 +125,8 @@ class NoteController extends Controller
                     'tags' => $note->noteTags->map(function ($noteTag) {
                         return $noteTag->tag->nama_tag ?? null;
                     })->filter()->values(),
+                    'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
+                    'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
                     'created_at' => $note->created_at->toIso8601String(),
                 ];
             });
@@ -124,20 +140,23 @@ class NoteController extends Controller
 
     public function mostLikeNotes(Request $request)
     {
+        $user = $request->user();
         $notes = Note::approved()
-            ->with(['noteTags.tag', 'savedByUsers', 'reviews'])
+            ->with(['noteTags.tag', 'savedByUsers', 'reviews', 'likes', 'transactions'])
             ->withCount(['transactions as jumlah_terjual' => function ($query) {
                 $query->where('status', 'success');
             }])
             ->orderByDesc('jumlah_like')
             ->get()
-            ->map(function ($note) {
+            ->map(function ($note) use ($user) {
                 return [
                     'note_id' => $note->note_id,
                     'seller' => [
                         'seller_id' => $note->seller_id,
                         'name' => $note->seller->name,
                         'username' => $note->seller->username,
+                        'foto_profil' => url($note->seller->foto_profil_url),
+                        'isTopCreator' => null,
                     ],
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
@@ -151,6 +170,8 @@ class NoteController extends Controller
                     'tags' => $note->noteTags->map(function ($noteTag) {
                         return $noteTag->tag->nama_tag ?? null;
                     })->filter()->values(),
+                    'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
+                    'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
                     'created_at' => $note->created_at->toIso8601String(),
                 ];
             });
@@ -271,6 +292,8 @@ class NoteController extends Controller
                     'seller_id' => $note->seller_id,
                     'name' => $note->seller->name,
                     'username' => $note->seller->username,
+                    'foto_profil' => url($note->seller->foto_profil_url),
+                    'isTopCreator' => null,
                 ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
@@ -310,7 +333,9 @@ class NoteController extends Controller
     public function getNoteDetail(Request $request, string $id)
     {
         try {
-            $note = Note::with(['noteTags.tag', 'seller'])
+            $user = $request->user();
+
+            $note = Note::with(['noteTags.tag', 'seller', 'likes', 'savedByUsers', 'transactions'])
                 ->withCount(['savedByUsers', 'transactions'])
                 ->withAvg('reviews', 'rating')
                 ->findOrFail($id);
@@ -340,6 +365,8 @@ class NoteController extends Controller
                     'rating' => round($note->reviews_avg_rating ?? 0, 2),
                     'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                     'tags' => $note->noteTags->pluck('tag.nama_tag'),
+                    'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
+                    'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
                     'created_at' => $note->created_at->toIso8601String(),
                 ]
             ]);

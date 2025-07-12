@@ -16,13 +16,15 @@ class ProfileController extends Controller
         $user = $request->user();
 
         // Helper untuk format data note
-        $formatNote = function ($note) {
+        $formatNote = function ($note) use ($user) {
             return [
                 'note_id' => $note->note_id,
                 'seller' => [
                     'seller_id' => $note->seller->user_id ?? $note->seller_id,
                     'name' => $note->seller->nama ?? null,
                     'username' => $note->seller->username ?? null,
+                    'foto_profil' => url($note->seller->foto_profil_url),
+                    'isTopCreator' => null,
                 ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
@@ -34,6 +36,8 @@ class ProfileController extends Controller
                 'rating' => round($note->reviews->avg('rating') ?? 0, 2),
                 'gambar_preview' => asset('storage/' . $note->gambar_preview),
                 'tags' => $note->noteTags->pluck('tag.nama_tag'),
+                'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
+                'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
                 'created_at' => $note->created_at->toIso8601String(),
             ];
         };
@@ -41,7 +45,7 @@ class ProfileController extends Controller
         // Notes dijual oleh user (note status harus diterima)
         $notesDijual = $user->notes()
             ->whereHas('noteStatus', fn($q) => $q->where('status', 'diterima'))
-            ->with(['seller', 'noteTags.tag', 'reviews', 'savedByUsers', 'transactions'])
+            ->with(['seller', 'noteTags.tag', 'reviews', 'likes', 'savedByUsers', 'transactions'])
             ->get()
             ->map($formatNote);
 
@@ -49,14 +53,14 @@ class ProfileController extends Controller
         $notesDibeli = Transaction::where('buyer_id', $user->user_id)
             ->where('status', 'success')
             ->whereHas('note.noteStatus', fn($q) => $q->where('status', 'diterima'))
-            ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.savedByUsers', 'note.transactions'])
+            ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.likes', 'note.savedByUsers', 'note.transactions'])
             ->get()
             ->map(fn($tx) => $formatNote($tx->note));
 
         // Notes difavoritkan user (saved_notes), hanya note yang diterima
         $favoriteNotes = $user->savedNotes()
             ->whereHas('note.noteStatus', fn($q) => $q->where('status', 'diterima'))
-            ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.savedByUsers', 'note.transactions'])
+            ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.likes', 'note.savedByUsers', 'note.transactions'])
             ->get()
             ->map(fn($saved) => $formatNote($saved->note));
 
