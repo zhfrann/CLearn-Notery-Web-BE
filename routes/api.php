@@ -70,7 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notes/{id}/like', [NoteController::class, 'likeNote']);
     Route::delete('/notes/{id}/like', [NoteController::class, 'unlikeNote']);
     Route::post('/notes/{id}/favorite', [NoteController::class, 'addFavoriteNote']);
-    Route::post('/notes/{id}/favorite', [NoteController::class, 'removeFavoriteNote']);
+    Route::delete('/notes/{id}/favorite', [NoteController::class, 'removeFavoriteNote']);
 
     Route::put('/notes/{id}', [NoteController::class, 'updateNote']);
     // Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);

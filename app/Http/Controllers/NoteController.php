@@ -41,7 +41,7 @@ class NoteController extends Controller
                 'deskripsi' => $note->deskripsi,
                 'harga' => $note->harga,
                 'status' => $note->noteStatus->status,
-                'jumlah_like' => $note->jumlah_like,
+                'jumlah_like' => $note->likes()->count(),
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                 'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
@@ -102,7 +102,7 @@ class NoteController extends Controller
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
                     'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_like' => $note->likes()->count(),
                     'jumlah_favorit' => $note->savedByUsers->count(),
                     'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                     'jumlah_terjual' => $note->jumlah_terjual,
@@ -142,7 +142,7 @@ class NoteController extends Controller
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
                     'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_like' => $note->likes()->count(),
                     'jumlah_favorit' => $note->savedByUsers->count(),
                     'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                     'jumlah_terjual' => $note->jumlah_terjual,
@@ -333,7 +333,7 @@ class NoteController extends Controller
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
                     'harga' => $note->harga,
-                    'jumlah_like' => $note->jumlah_like,
+                    'jumlah_like' => $note->likes()->count(),
                     'jumlah_favorit' => $note->saved_by_users_count,
                     'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                     'jumlah_terjual' => $note->transactions_count,
@@ -367,14 +367,14 @@ class NoteController extends Controller
         }
 
         // Cek apakah user sudah like note ini
-        $alreadyLiked = $note->likes()->where('user_id', $user->id)->exists();
+        $alreadyLiked = $note->likes()->where('user_id', $user->user_id)->exists();
         if ($alreadyLiked) {
             return response()->json([
                 'success' => false,
                 'message' => 'Kamu sudah like note ini.',
                 'data' => [
-                    'note_id' => $note->id,
-                    'judul' => $note->title,
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
                     'total_like' => $note->likes()->count(),
                 ]
             ], 200);
@@ -389,8 +389,8 @@ class NoteController extends Controller
             'success' => true,
             'message' => 'Berhasil menambah like note',
             'data' => [
-                'note_id' => $note->id,
-                'judul' => $note->title,
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
                 'total_like' => $note->likes()->count(),
             ]
         ], 201);

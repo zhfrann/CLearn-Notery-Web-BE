@@ -11,7 +11,7 @@ class NoteLike extends Model
     // use HasFactory;
 
     protected $table = 'note_likes';
-    protected $primaryKey = 'note_id';
+    protected $primaryKey = 'note_like_id';
     protected $keyType = 'int';
     public $incrementing = true;
     public $timestamps = true;
