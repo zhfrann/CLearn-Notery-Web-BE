@@ -66,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notes', [NoteController::class, 'createNote']);
 
     Route::get('/notes/{id}', [NoteController::class, 'getNoteDetail']);
+    Route::get('/notes/{id}/reviews', [NoteController::class, 'getReviews']);
     Route::post('/notes/{id}/like', [NoteController::class, 'addLikeNote']);
     Route::post('/notes/{id}/favorite', [NoteController::class, 'addFavoriteNote']);
 

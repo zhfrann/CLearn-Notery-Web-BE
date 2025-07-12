@@ -17,7 +17,7 @@ class NoteSeeder extends Seeder
     public function run(): void
     {
         $sellerIds = [1, 2, 3, 4];
-        $courseIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        $courseIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
         $previewImages = [
             'notes/files/note1.png',
             'notes/files/note2.png',
