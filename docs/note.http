@@ -54,6 +54,18 @@ Content-Type: image/png
 
 
 
+### Get All Notes
+GET http://localhost:8000/api/notes
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer <token user here>
+
+{}
+
+
+
+
+
 ### Get Notes on Profile
 GET http://localhost:8000/api/profile/notes
 Accept: application/json
@@ -65,8 +77,17 @@ Authorization: Bearer <token user here>
 
 
 
-### Get All Notes
-GET http://localhost:8000/api/notes
+### Get Note Detail with note_id 12
+GET http://localhost:8000/api/notes/12
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer <token user here>
+
+{}
+
+
+### Get Note Detail with note_id 50
+GET http://localhost:8000/api/notes/50
 Accept: application/json
 Content-Type: application/json
 Authorization: Bearer <token user here>
