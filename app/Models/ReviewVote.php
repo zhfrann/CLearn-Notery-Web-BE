@@ -19,7 +19,7 @@ class ReviewVote extends Model
     protected $fillable = [
         'review_id',
         'user_id',
-        'vote_type',
+        'tipe_vote',
     ];
 
     public function review(): BelongsTo
