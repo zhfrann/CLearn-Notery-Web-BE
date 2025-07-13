@@ -2,7 +2,7 @@
 GET http://localhost:8000/api/notes/4/reviews
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|kuJlTkO44gVRExGJUQLfJm7z9wEmD8NhdSY9c2lx81d1bc62
+Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
 
 {}
 
@@ -12,6 +12,37 @@ Authorization: Bearer 1|kuJlTkO44gVRExGJUQLfJm7z9wEmD8NhdSY9c2lx81d1bc62
 GET http://localhost:8000/api/notes/99/reviews
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|kuJlTkO44gVRExGJUQLfJm7z9wEmD8NhdSY9c2lx81d1bc62
+Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
+
+{}
+
+
+
+
+### Like Review
+POST http://localhost:8000/api/reviews/4/vote
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
+
+{
+  "tipe_vote": "like"
+}
+
+### Dislike Review
+POST http://localhost:8000/api/reviews/4/vote
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
+
+{
+  "tipe_vote": "dislike"
+}
+
+### Unvote Review
+DELETE http://localhost:8000/api/reviews/4/vote
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
 
 {}

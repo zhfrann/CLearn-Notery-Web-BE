@@ -80,6 +80,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::put('/notes/{id}/reviews', [ReviewController::class, 'updateReview']);
     // Route::delete('/notes/{id}/reviews', [ReviewController::class, 'deleteReview']);
 
+    Route::post('/reviews/{id}/vote', [ReviewController::class, 'voteReview']);
+    Route::delete('/reviews/{id}/vote', [ReviewController::class, 'unvoteReview']);
+
 
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);
