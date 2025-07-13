@@ -48,11 +48,11 @@ class Review extends Model
 
     public function getLikeCountAttribute()
     {
-        return $this->votes()->where('vote_type', '=', 'like')->count();
+        return $this->votes()->where('tipe_vote', '=', 'like')->count();
     }
 
     public function getDislikeCountAttribute()
     {
-        return $this->votes()->where('vote_type', '=', 'dislike')->count();
+        return $this->votes()->where('tipe_vote', '=', 'dislike')->count();
     }
 }
