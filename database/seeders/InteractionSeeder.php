@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\Note;
 use App\Models\NoteLike;
 use App\Models\Review;
+use App\Models\ReviewResponse;
+use App\Models\ReviewVote;
 use App\Models\SavedNote;
 use App\Models\Transaction;
 use App\Models\User;
@@ -68,6 +70,40 @@ class InteractionSeeder extends Seeder
                         'rating' => rand(3, 5),
                         'tgl_review' => now()->subDays(rand(1, 30)),
                     ]);
+                }
+            }
+
+            // ====== REVIEW ======
+            $takeReview = min($eligibleUsers->count(), rand(1, 5));
+            if ($takeReview > 0) {
+                $reviewerIds = $eligibleUsers->random($takeReview)->pluck('user_id');
+                foreach ($reviewerIds as $reviewerId) {
+                    $review = Review::create([
+                        'user_id' => $reviewerId,
+                        'note_id' => $note->note_id,
+                        'komentar' => fake()->sentence(),
+                        'rating' => rand(3, 5),
+                        'tgl_review' => now()->subDays(rand(1, 30)),
+                    ]);
+
+                    // Seeder untuk review_votes (like/dislike review)
+                    $voters = $eligibleUsers->where('user_id', '!=', $reviewerId)->shuffle()->take(rand(0, 3));
+                    foreach ($voters as $voter) {
+                        ReviewVote::create([
+                            'review_id' => $review->review_id,
+                            'user_id' => $voter->user_id,
+                            'tipe_vote' => fake()->randomElement(['like', 'dislike']),
+                        ]);
+                    }
+
+                    if (fake()->boolean(50)) { // 50% kemungkinan review diberi respon
+                        ReviewResponse::create([
+                            'review_id' => $review->review_id,
+                            'seller_id' => $note->seller_id,
+                            'respon' => fake()->sentence(),
+                            'tgl_respon' => now()->subDays(rand(0, 10)),
+                        ]);
+                    }
                 }
             }
         }

@@ -66,7 +66,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notes', [NoteController::class, 'createNote']);
 
     Route::get('/notes/{id}', [NoteController::class, 'getNoteDetail']);
-    Route::get('/notes/{id}/reviews', [NoteController::class, 'getReviews']);
     Route::post('/notes/{id}/like', [NoteController::class, 'likeNote']);
     Route::delete('/notes/{id}/like', [NoteController::class, 'unlikeNote']);
     Route::post('/notes/{id}/favorite', [NoteController::class, 'addFavoriteNote']);
@@ -80,6 +79,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notes/{id}/reviews', [ReviewController::class, 'createReview']);
     // Route::put('/notes/{id}/reviews', [ReviewController::class, 'updateReview']);
     // Route::delete('/notes/{id}/reviews', [ReviewController::class, 'deleteReview']);
+
+    Route::post('/reviews/{id}/vote', [ReviewController::class, 'voteReview']);
+    Route::delete('/reviews/{id}/vote', [ReviewController::class, 'unvoteReview']);
 
 
     // Route::prefix('/user')->group(function () {

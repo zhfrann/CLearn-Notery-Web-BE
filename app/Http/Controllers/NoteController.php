@@ -378,8 +378,6 @@ class NoteController extends Controller
         }
     }
 
-    public function getReviews(Request $request, string $id) {}
-
     public function likeNote(Request $request, string $id)
     {
         $user = auth()->user();
