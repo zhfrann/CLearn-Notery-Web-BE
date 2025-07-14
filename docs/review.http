@@ -2,7 +2,7 @@
 GET http://localhost:8000/api/notes/4/reviews
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
+Authorization: Bearer <token user here>
 
 {}
 
@@ -12,7 +12,7 @@ Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
 GET http://localhost:8000/api/notes/99/reviews
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
+Authorization: Bearer <token user here>
 
 {}
 
@@ -23,7 +23,7 @@ Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
 POST http://localhost:8000/api/reviews/4/vote
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
+Authorization: Bearer <token user here>
 
 {
   "tipe_vote": "like"
@@ -33,7 +33,7 @@ Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
 POST http://localhost:8000/api/reviews/4/vote
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
+Authorization: Bearer <token user here>
 
 {
   "tipe_vote": "dislike"
@@ -43,6 +43,6 @@ Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
 DELETE http://localhost:8000/api/reviews/4/vote
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|D1Azq5iHt8prtMu3YviM2fsnBpKMpmHdGt3ijQmS25190a6f
+Authorization: Bearer <token user here>
 
 {}
