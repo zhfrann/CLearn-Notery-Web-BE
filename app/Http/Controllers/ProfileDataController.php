@@ -6,12 +6,21 @@ use Illuminate\Http\Request;
 
 class ProfileDataController extends Controller
 {
-    public function productStatus(Request $request) {
+    public function productStatus(Request $request)
+    {
         $user = $request->user();
 
-        $menunggu = $user->notes()->where('status', 'menunggu')->get(['note_id', 'judul', 'gambar_preview', 'created_at']);
-        $diterima = $user->notes()->where('status', 'diterima')->get(['note_id', 'judul', 'gambar_preview', 'created_at']);
-        $ditolak = $user->notes()->where('status', 'ditolak')->get(['note_id', 'judul', 'gambar_preview', 'created_at']);
+        $menunggu = $user->notes()
+            ->whereHas('noteStatus', fn($q) => $q->where('status', 'menunggu'))
+            ->get(['note_id', 'judul', 'gambar_preview', 'created_at']);
+
+        $diterima = $user->notes()
+            ->whereHas('noteStatus', fn($q) => $q->where('status', 'diterima'))
+            ->get(['note_id', 'judul', 'gambar_preview', 'created_at']);
+
+        $ditolak = $user->notes()
+            ->whereHas('noteStatus', fn($q) => $q->where('status', 'ditolak'))
+            ->get(['note_id', 'judul', 'gambar_preview', 'created_at']);
 
         return response()->json([
             'success' => true,
