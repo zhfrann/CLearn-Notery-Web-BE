@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Semester;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 class UserResource extends JsonResource
 {
@@ -15,6 +16,26 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $notes = $this->whenLoaded('notes');
+        $notes = $notes instanceof Collection ? $notes : null;
+
+        if ($notes) {
+            $allReviews = $notes->flatMap->reviews;
+            $allTransactions = $notes->flatMap->transactions;
+
+            $rating = $allReviews->count() > 0 ? round($allReviews->avg('rating'), 2) : null;
+            $catatan = $notes->count();
+            $terjual = $allTransactions->count();
+            $pendapatan = $allTransactions->sum(function ($tx) {
+                return $tx->note ? $tx->note->harga : 0;
+            });
+        } else {
+            $rating = null;
+            $catatan = null;
+            $terjual = null;
+            $pendapatan = null;
+        }
+
         // return parent::toArray($request);
         return [
             'user_id' => $this->user_id,
@@ -25,6 +46,11 @@ class UserResource extends JsonResource
             'status_akun' => $this->status_akun,
             'deskripsi' => $this->deskripsi,
             'jenis_kelamin' => $this->jenis_kelamin,
+
+            'rating' => $rating,
+            'catatan' => $catatan,
+            'terjual' => $terjual,
+            'pendapatan' => $pendapatan,
 
             // 'semester' => new SemesterResource($this->whenLoaded('semester')),
             'semester' => $this->whenLoaded('semester')?->nomor_semester,
