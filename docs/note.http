@@ -70,7 +70,7 @@ Authorization: Bearer <token user here>
 GET http://localhost:8000/api/profile/notes
 Accept: application/json
 Content-Type: application/json
-Authorization: Bearer 3|KFnbU59z8hoo3JfOdIqHEaFcn6i3pWAM31dXVbdk2488fe85
+Authorization: Bearer <token user here>
 
 {}
 

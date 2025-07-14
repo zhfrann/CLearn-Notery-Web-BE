@@ -2,6 +2,6 @@
 GET http://localhost:8000/api/profile
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 5|8ml40ZyEPYAELmqkqQmktyaLEdnobby5BzAsR5ZOaf9638b5
+Authorization: Bearer <token user here>
 
 {}
