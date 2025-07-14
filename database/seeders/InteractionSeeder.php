@@ -50,7 +50,7 @@ class InteractionSeeder extends Seeder
                 }
             }
 
-            // ====== TRANSAKSI & REVIEW ======
+            // ====== TRANSAKSI ======
             $takeTrans = min($eligibleUsers->count(), rand(1, 5));
             if ($takeTrans > 0) {
                 $buyerIds = $eligibleUsers->random($takeTrans)->pluck('user_id');
@@ -61,14 +61,6 @@ class InteractionSeeder extends Seeder
                         'status' => 'selesai',
                         'tgl_transaksi' => now()->subDays(rand(1, 30)),
                         'catatan' => fake()->sentence(),
-                    ]);
-
-                    Review::create([
-                        'user_id' => $buyerId,
-                        'note_id' => $note->note_id,
-                        'komentar' => fake()->sentence(),
-                        'rating' => rand(3, 5),
-                        'tgl_review' => now()->subDays(rand(1, 30)),
                     ]);
                 }
             }
