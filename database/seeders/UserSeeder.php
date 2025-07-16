@@ -15,24 +15,28 @@ class UserSeeder extends Seeder
             "email" => "user1@gmail.com",
             "password" => "rahasia123",
             "foto_profil" => "foto_profil/user1.png",
+            "qr_code" => "qr_code/user1.png",
         ],
         "user2" => [
             "username" => "user2",
             "email" => "user2@gmail.com",
             "password" => "rahasia123",
             "foto_profil" => "foto_profil/user2.png",
+            "qr_code" => "qr_code/user2.png",
         ],
         "evan_john" => [
             "username" => "evan_john",
             "email" => "evanjohn@gmail.com",
             "password" => "rahasia123",
             "foto_profil" => "foto_profil/evan_john.png",
+            "qr_code" => "qr_code/evan_john.png",
         ],
         "e_khansa" => [
             "username" => "e_khansa",
             "email" => "khansa@gmail.com",
             "password" => "rahasia123",
             "foto_profil" => "foto_profil/e_khansa.png",
+            "qr_code" => "qr_code/e_khansa.png",
         ],
     ];
 
