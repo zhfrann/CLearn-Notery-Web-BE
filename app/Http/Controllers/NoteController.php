@@ -8,6 +8,7 @@ use App\Models\NoteFile;
 use App\Models\NoteStatus;
 use App\Models\NoteTag;
 use App\Models\Tag;
+use App\Models\Transaction;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -543,9 +544,80 @@ class NoteController extends Controller
         ], 200);
     }
 
-    public function updateNote(Request $request, string $id) {}
+    // public function updateNote(Request $request, string $id) {}
 
-    public function deleteNote(Request $request, string $id) {}
+    // public function deleteNote(Request $request, string $id) {}
 
-    // public function buyNote(Request $request, string $id) {}
+    public function buyNote(Request $request, string $id)
+    {
+        $user = $request->user();
+
+        // Validasi input
+        $request->validate([
+            'bukti_pembayaran' => 'required|image|mimes:jpg,jpeg,png|max:10240'
+        ]);
+
+        try {
+            $note = Note::with('seller')->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        // Cek apakah user mencoba membeli note miliknya sendiri
+        if ($note->seller_id === $user->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak dapat membeli note milik sendiri',
+                'data' => null
+            ], 400);
+        }
+
+        // Cek apakah user sudah pernah membeli note ini
+        $existingTransaction = Transaction::where('note_id', $note->note_id)
+            ->where('buyer_id', $user->user_id)
+            ->first();
+
+        if ($existingTransaction) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda sudah pernah membeli note ini',
+                'data' => null
+            ], 400);
+        }
+
+        // Upload bukti pembayaran
+        $file = $request->file('bukti_pembayaran');
+        $filename = $user->username . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs('bukti_pembayaran', $filename, 'public');
+
+        // Buat transaksi baru
+        $transaction = Transaction::create([
+            'note_id' => $note->note_id,
+            'buyer_id' => $user->user_id,
+            'status' => 'selesai',
+            // 'status' => 'menunggu', // Status awal pending, akan diubah admin/seller
+            'tgl_transaksi' => now(),
+            // 'catatan' => 'Transaksi pembelian note: ' . $note->judul,
+            'bukti_pembayaran' => $path,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil membeli note',
+            'data' => [
+                'transaction_id' => $transaction->transaction_id,
+                'note_id' => $note->note_id,
+                'user_id' => $user->user_id,
+                'username' => $user->username,
+                'nama' => $user->nama,
+                'judul' => $note->judul,
+                'status' => $transaction->status,
+                'bukti_pembayaran' => url('storage/' . $path),
+            ]
+        ]);
+    }
 }

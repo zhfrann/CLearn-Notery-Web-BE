@@ -48,9 +48,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::put('/profile/password', [ProfileController::class, 'changePassword']);
     // Route::put('/profile/photo', [ProfileController::class, 'updatePhoto']);
     Route::get('/profile/notes', [ProfileController::class, 'getNotes']);
+    Route::get('/profile/qr-code', [ProfileController::class, 'getQrCode']);
+    Route::post('/profile/qr-code', [ProfileController::class, 'uploadQrCode']);
 
     Route::get('/profile/product-status', [ProfileDataController::class, 'productStatus']);
     Route::get('/profile/transactions', [ProfileDataController::class, 'transactions']);
+    Route::get('/profile/transactions/{id}', [ProfileDataController::class, 'transactionDetail']);
     // Route::get('/profile/favorites-notes', [ProfileDataController::class, 'favoritesNotes']);
 
     Route::get('/faculties', [AcademicStructureController::class, 'getFaculties']);
@@ -73,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/notes/{id}', [NoteController::class, 'updateNote']);
     // Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);
-    // Route::get('/notes/{id}/buy', [NoteController::class, 'buyNote']);
+    Route::post('/notes/{id}/buy', [NoteController::class, 'buyNote']);
 
     Route::get('/notes/{id}/reviews', [ReviewController::class, 'getReviews']);
     Route::post('/notes/{id}/reviews', [ReviewController::class, 'createReview']);
