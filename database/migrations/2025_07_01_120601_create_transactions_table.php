@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('status');
             $table->datetime('tgl_transaksi')->useCurrent();
             $table->text('catatan')->nullable();
+            $table->string('bukti_pembayaran')->nullable();
             $table->timestamps();
         });
     }

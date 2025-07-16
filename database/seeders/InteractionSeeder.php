@@ -15,6 +15,13 @@ use Illuminate\Database\Seeder;
 
 class InteractionSeeder extends Seeder
 {
+    private $sampleBuktiPembayaran = [
+        'bukti_pembayaran/bukti1.jpg',
+        'bukti_pembayaran/bukti2.jpg',
+        'bukti_pembayaran/bukti3.jpg',
+        'bukti_pembayaran/bukti4.jpg',
+    ];
+
     /**
      * Run the database seeds.
      */
@@ -55,12 +62,15 @@ class InteractionSeeder extends Seeder
             if ($takeTrans > 0) {
                 $buyerIds = $eligibleUsers->random($takeTrans)->pluck('user_id');
                 foreach ($buyerIds as $buyerId) {
+                    $buktiBayar = collect($this->sampleBuktiPembayaran)->random();
+
                     Transaction::create([
                         'note_id' => $note->note_id,
                         'buyer_id' => $buyerId,
                         'status' => 'selesai',
                         'tgl_transaksi' => now()->subDays(rand(1, 30)),
                         'catatan' => fake()->sentence(),
+                        'bukti_pembayaran' => $buktiBayar,
                     ]);
                 }
             }

@@ -128,3 +128,20 @@ Accept: application/json
 Authorization: Bearer <token user here>
 
 {}
+
+
+
+
+
+
+### Buy Note
+POST http://localhost:8000/api/notes/4/buy
+Authorization: Bearer <token user here>
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bukti_pembayaran"; filename="bukti_bayar.jpg"
+Content-Type: image/jpeg
+
+< G:/bukti-bayar.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

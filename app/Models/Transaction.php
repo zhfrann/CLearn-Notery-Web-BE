@@ -22,7 +22,8 @@ class Transaction extends Model
         'buyer_id',
         'status',
         'tgl_transaksi',
-        'catatan'
+        'catatan',
+        'bukti_pembayaran'
     ];
 
     public function note(): BelongsTo
