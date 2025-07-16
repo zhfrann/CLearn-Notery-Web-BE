@@ -109,5 +109,5 @@ class ProfileDataController extends Controller
         ]);
     }
 
-    public function favoritesNotes(Request $request) {}
+    // public function favoritesNotes(Request $request) {}
 }
