@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/profile/product-status', [ProfileDataController::class, 'productStatus']);
     Route::get('/profile/transactions', [ProfileDataController::class, 'transactions']);
+    Route::get('/profile/transactions/{id}', [ProfileDataController::class, 'transactionDetail']);
     // Route::get('/profile/favorites-notes', [ProfileDataController::class, 'favoritesNotes']);
 
     Route::get('/faculties', [AcademicStructureController::class, 'getFaculties']);
