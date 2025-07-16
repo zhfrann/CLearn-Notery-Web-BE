@@ -53,6 +53,7 @@ class UserSeeder extends Seeder
                 "role" => "student",
                 "status_akun" => "aktif",
                 "foto_profil" => $user["foto_profil"],
+                "qr_code" => $user["qr_code"]
             ]);
         }
     }

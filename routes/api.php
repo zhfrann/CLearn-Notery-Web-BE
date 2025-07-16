@@ -48,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::put('/profile/password', [ProfileController::class, 'changePassword']);
     // Route::put('/profile/photo', [ProfileController::class, 'updatePhoto']);
     Route::get('/profile/notes', [ProfileController::class, 'getNotes']);
+    Route::get('/profile/qr-code', [ProfileController::class, 'getQrCode']);
+    Route::post('/profile/qr-code', [ProfileController::class, 'uploadQrCode']);
 
     Route::get('/profile/product-status', [ProfileDataController::class, 'productStatus']);
     Route::get('/profile/transactions', [ProfileDataController::class, 'transactions']);

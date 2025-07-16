@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -17,6 +18,55 @@ class ProfileController extends Controller
             'success' => true,
             'message' => '',
             'data' => new UserResource($user->load(['semester', 'major', 'faculty', 'notes', 'transactions']))
+        ]);
+    }
+
+    public function getQrCode(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            "success" => true,
+            "message" => "QR Code user",
+            "data" => [
+                "user_id" => $user->user_id,
+                "username" => $user->username,
+                "nama" => $user->nama,
+                "qr_code_url" => $user->qr_code ? url("storage/" . $user->qr_code) : null
+            ]
+        ]);
+    }
+
+    public function uploadQrCode(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'qr_code' => 'required|image|mimes:png,jpg,jpeg|max:10240'
+        ]);
+
+        // Hapus QR code lama jika ada
+        if ($user->qr_code && Storage::disk('public')->exists($user->qr_code)) {
+            Storage::disk('public')->delete($user->qr_code);
+        }
+
+        // Upload QR code baru
+        $file = $request->file('qr_code');
+        $filename = $user->username . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs('qr_code', $filename, 'public');
+
+        // Update user
+        $user->update(['qr_code' => $path]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'QR Code berhasil diupload',
+            'data' => [
+                "user_id" => $user->user_id,
+                "username" => $user->username,
+                "nama" => $user->nama,
+                'qr_code_url' => url('storage/' . $path)
+            ]
         ]);
     }
 
