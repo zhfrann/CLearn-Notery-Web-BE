@@ -42,7 +42,7 @@ class AuthController extends Controller
             'role' => 'student',
             'status_akun' => 'aktif',
             'foto_profil' => $filename,
-            'jumlah_like' => 0
+            // 'jumlah_like' => 0
         ]);
 
         return response()->json([
