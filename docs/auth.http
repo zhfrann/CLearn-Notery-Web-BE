@@ -4,8 +4,8 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "username": "user1",
-    "email": "user1@gmail.com",
+    "username": "laravel-gila",
+    "email": "makzulkanGibran@gmail.com",
     "password": "rahasia123"
 }
 
