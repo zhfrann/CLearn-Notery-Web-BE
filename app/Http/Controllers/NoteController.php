@@ -544,9 +544,59 @@ class NoteController extends Controller
         ], 200);
     }
 
-    // public function updateNote(Request $request, string $id) {}
+    public function getFiles(Request $request, string $id)
+    {
+        $user = $request->user();
 
-    // public function deleteNote(Request $request, string $id) {}
+        try {
+            $note = Note::query()->with('files')->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        $isOwner = $note->seller_id === $user->user_id;
+
+        $hasPurchased = Transaction::where('note_id', $note->note_id)
+            ->where('buyer_id', $user->user_id)
+            ->where('status', 'selesai')
+            ->exists();
+
+        // User hanya bisa akses files jika sudah membeli atau adalah pemilik
+        if (!$hasPurchased && !$isOwner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda belum membeli note ini',
+                'data' => null
+            ], 403);
+        }
+
+        $files = $note->files->map(function ($file) {
+            return [
+                'note_file_id' => $file->note_file_id,
+                'nama_file' => $file->nama_file,
+                'path_file' => url('storage/' . $file->path_file),
+                'tipe' => $file->tipe,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar files note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'files' => $files,
+            ]
+        ]);
+    }
+
+    public function updateNote(Request $request, string $id) {}
+
+    public function deleteNote(Request $request, string $id) {}
 
     public function buyNote(Request $request, string $id)
     {

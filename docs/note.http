@@ -145,3 +145,15 @@ Content-Type: image/jpeg
 
 < G:/bukti-bayar.png
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+
+
+
+
+### Get Note Files (Only for purchased notes or seller's note)
+GET http://localhost:8000/api/notes/4/files
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token user here>
+
+{}
