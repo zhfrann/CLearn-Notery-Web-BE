@@ -157,3 +157,32 @@ Accept: application/json
 Authorization: Bearer <token user here>
 
 {}
+
+
+
+
+
+### Update Note (Only seller can edit)
+PUT http://localhost:8000/api/notes/8
+Authorization: Bearer <token seller here>
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="judul"
+
+ini judul yang sudah diedit
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="deskripsi"
+
+anjay deskripsi baru
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="files[]"; filename="file1.pdf"
+Content-Type: application/pdf
+
+< ./path/to/file1.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="files[]"; filename="file2.png"
+Content-Type: image/png
+
+< ./path/to/file2.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
