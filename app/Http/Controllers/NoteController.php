@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class NoteController extends Controller
 {
@@ -199,7 +200,7 @@ class NoteController extends Controller
             'semester_id' => ['required', 'exists:semesters,semester_id'],
             'matkul_id' => ['required', 'exists:courses,course_id'],
             'files' => ['required', 'array'],
-            'files.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:20480']
+            'files.*' => ['file', 'mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png', 'max:51200']
         ]);
 
         if (!$request->hasFile('files')) {
@@ -544,9 +545,248 @@ class NoteController extends Controller
         ], 200);
     }
 
-    // public function updateNote(Request $request, string $id) {}
+    public function getFiles(Request $request, string $id)
+    {
+        $user = $request->user();
 
-    // public function deleteNote(Request $request, string $id) {}
+        try {
+            $note = Note::query()->with('files')->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        $isOwner = $note->seller_id === $user->user_id;
+
+        $hasPurchased = Transaction::where('note_id', $note->note_id)
+            ->where('buyer_id', $user->user_id)
+            ->where('status', 'selesai')
+            ->exists();
+
+        // User hanya bisa akses files jika sudah membeli atau adalah pemilik
+        if (!$hasPurchased && !$isOwner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda belum membeli note ini',
+                'data' => null
+            ], 403);
+        }
+
+        $files = $note->files->map(function ($file) {
+            return [
+                'note_file_id' => $file->note_file_id,
+                'nama_file' => $file->nama_file,
+                'path_file' => url('storage/' . $file->path_file),
+                'tipe' => $file->tipe,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar files note',
+            'data' => [
+                'note_id' => $note->note_id,
+                'judul' => $note->judul,
+                'files' => $files,
+            ]
+        ]);
+    }
+
+    public function updateNote(Request $request, string $id)
+    {
+        $user = $request->user();
+
+        try {
+            $note = Note::with(['seller', 'noteStatus', 'course.major.faculty', 'course.semester', 'noteTags.tag', 'files'])
+                ->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        // Cek apakah user adalah pemilik note
+        if ($note->seller_id !== $user->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk mengedit note ini',
+                'data' => null
+            ], 403);
+        }
+
+        // Validasi input
+        $request->validate([
+            'judul' => 'sometimes|string|max:255',
+            'deskripsi' => 'sometimes|string',
+            'files.*' => 'sometimes|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,zip,rar,jpg,jpeg,png|max:51200', // max 50MB per file
+        ]);
+
+        // Update note fields jika ada di request
+        $updateData = [];
+        if ($request->has('judul')) {
+            $updateData['judul'] = $request->judul;
+        }
+        if ($request->has('deskripsi')) {
+            $updateData['deskripsi'] = $request->deskripsi;
+        }
+
+        if (!empty($updateData)) {
+            $note->update($updateData);
+        }
+
+        // Handle file uploads jika ada
+        if ($request->hasFile('files')) {
+            // Hapus file lama (opsional, atau bisa keep untuk backup)
+            foreach ($note->files as $oldFile) {
+                if (Storage::disk('public')->exists($oldFile->path_file)) {
+                    Storage::disk('public')->delete($oldFile->path_file);
+                }
+                $oldFile->delete();
+            }
+
+            // Upload file baru
+            foreach ($request->file('files') as $file) {
+                $originalName = $file->getClientOriginalName();
+                $filename = time() . '_' . $originalName;
+                $path = $file->storeAs('note_files', $filename, 'public');
+
+                // Simpan ke database
+                NoteFile::create([
+                    'note_id' => $note->note_id,
+                    'nama_file' => $originalName,
+                    'path_file' => $path
+                ]);
+            }
+
+            // Refresh note dengan files terbaru
+            $note->load('files');
+        }
+
+        // Format response
+        $responseData = [
+            'note_id' => $note->note_id,
+            'seller' => [
+                'seller_id' => $note->seller->user_id,
+                'nama' => $note->seller->nama,
+                'username' => $note->seller->username,
+                'foto_profil' => $note->seller->foto_profil ?
+                    url('storage/' . $note->seller->foto_profil) : null,
+            ],
+            'judul' => $note->judul,
+            'deskripsi' => $note->deskripsi,
+            'harga' => $note->harga,
+            'status' => $note->noteStatus ? $note->noteStatus->status : null,
+            'gambar_preview' => $note->gambar_preview ?
+                url('storage/' . $note->gambar_preview) : null,
+            'fakultas' => [
+                'faculty_id' => $note->course->major->faculty->faculty_id,
+                'nama_fakultas' => $note->course->major->faculty->nama_fakultas,
+            ],
+            'prodi' => [
+                'major_id' => $note->course->major->major_id,
+                'nama_program_studi' => $note->course->major->nama_program_studi,
+            ],
+            'semester' => [
+                'semester_id' => $note->course->semester->semester_id,
+                'nama_semester' => $note->course->semester->nama_semester,
+            ],
+            'matkul_favorit' => [
+                'course_id' => $note->course->course_id,
+                'nama_matkul' => $note->course->nama_matkul,
+            ],
+            'tags' => $note->noteTags->pluck('tag.nama_tag'),
+            'files' => $note->files->map(function ($file) {
+                return [
+                    'nama_file' => $file->nama_file,
+                    'path_file' => url('storage/' . $file->path_file),
+                    'created_at' => $file->created_at->toIso8601String(),
+                    'updated_at' => $file->updated_at->toIso8601String(),
+                ];
+            }),
+            'created_at' => $note->created_at->toIso8601String(),
+            'updated_at' => $note->updated_at->toIso8601String(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengedit note',
+            'data' => $responseData
+        ]);
+    }
+
+    public function deleteNote(Request $request, string $id)
+    {
+        $user = $request->user();
+
+        try {
+            $note = Note::with(['files'])->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        // Cek apakah user adalah pemilik note
+        if ($note->seller_id !== $user->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk menghapus note ini',
+                'data' => null
+            ], 403);
+        }
+
+        // Cek apakah note sudah pernah dibeli (ada transaksi)
+        $hasPurchases = Transaction::where('note_id', $note->note_id)->exists();
+
+        if ($hasPurchases) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak dapat dihapus karena sudah pernah dibeli',
+                'data' => null
+            ], 400);
+        }
+
+        // Simpan data untuk response sebelum dihapus
+        $responseData = [
+            'note_id' => $note->note_id,
+            'judul' => $note->judul,
+        ];
+
+        // Hapus file-file terkait dari storage
+        foreach ($note->files as $file) {
+            if (Storage::disk('public')->exists($file->path_file)) {
+                Storage::disk('public')->delete($file->path_file);
+            }
+        }
+
+        // Hapus gambar preview jika ada
+        if ($note->gambar_preview && Storage::disk('public')->exists($note->gambar_preview)) {
+            Storage::disk('public')->delete($note->gambar_preview);
+        }
+
+        // $note->files()->delete();
+        // $note->noteTags()->delete();
+        // $note->likes()->delete();
+        // $note->savedByUsers()->delete();
+        // $note->reviews()->delete();
+        // $note->noteStatus()->delete();
+
+        // Hapus note
+        $note->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menghapus note',
+            'data' => $responseData
+        ]);
+    }
 
     public function buyNote(Request $request, string $id)
     {
