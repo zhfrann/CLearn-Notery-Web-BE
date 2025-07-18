@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Faculty;
 use App\Models\Major;
 use App\Models\Semester;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AcademicStructureController extends Controller
@@ -76,14 +77,13 @@ class AcademicStructureController extends Controller
 
     public function updateAcademic(Request $request)
     {
-        $request->validate([
-        'user_id' => 'required|exists:users,id',
-        'faculty_id' => 'nullable|exists:faculties,faculty_id',
-        'major_id' => 'nullable|exists:majors,major_id',
-        'semester_id' => 'nullable|exists:semesters,semester_id',
-        ]);
+        $user = $request->user();
 
-        $user = User::find($request->user_id);
+        $request->validate([
+            'faculty_id' => 'nullable|exists:faculties,faculty_id',
+            'major_id' => 'nullable|exists:majors,major_id',
+            'semester_id' => 'nullable|exists:semesters,semester_id',
+        ]);
 
         if ($request->has('faculty_id')) {
             $user->faculty_id = $request->faculty_id;
