@@ -59,7 +59,14 @@ class UserResource extends JsonResource
             // 'faculty' => new FacultyResource($this->whenLoaded('faculty')),
             'faculty' => $this->whenLoaded('faculty')?->nama_fakultas,
 
-            'matkul_favorit' => $this->matkul_favorit,
+            'matkul_favorit' => $this->whenLoaded('favoriteCourses', function () {
+                return $this->favoriteCourses->map(function ($favorite) {
+                    return [
+                        'course_id' => $favorite->course->course_id,
+                        'nama_mk' => $favorite->course->nama_mk
+                    ];
+                });
+            }),
             // 'foto_profil' => $this->foto_profil,
             'jumlah_like' => $this->jumlah_like,
             // 'rating' => $this->rating,

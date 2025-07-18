@@ -63,6 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/semesters', [AcademicStructureController::class, 'getSemesters']);
     Route::get('/courses', [AcademicStructureController::class, 'getCourses']);
 
+    Route::get('/favorite-courses', [AcademicStructureController::class, 'getFavoriteCourses']);
+    Route::post('/favorite-courses', [AcademicStructureController::class, 'addFavoriteCourse']);
+    Route::delete('/favorite-courses/{id}', [AcademicStructureController::class, 'removeFavoriteCourse']);
+
     Route::get('/notes/latest-notes', [NoteController::class, 'latestNotes']);
     Route::get('/notes/most-liked-notes', [NoteController::class, 'mostLikeNotes']);
     Route::post('/top-creator', [NoteController::class, 'topCreator']);
