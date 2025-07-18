@@ -51,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/qr-code', [ProfileController::class, 'getQrCode']);
     Route::post('/profile/qr-code', [ProfileController::class, 'uploadQrCode']);
 
+    Route::put('/profile/academic', [AcademicStructureController::class, 'updateAcademic']);
     Route::get('/profile/product-status', [ProfileDataController::class, 'productStatus']);
     Route::get('/profile/transactions', [ProfileDataController::class, 'transactions']);
     Route::get('/profile/transactions/{id}', [ProfileDataController::class, 'transactionDetail']);
@@ -75,7 +76,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/notes/{id}/favorite', [NoteController::class, 'removeFavoriteNote']);
 
     Route::put('/notes/{id}', [NoteController::class, 'updateNote']);
-    // Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);
+    Route::get('/notes/{id}/files', [NoteController::class, 'getFiles']);
+    Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);
     Route::post('/notes/{id}/buy', [NoteController::class, 'buyNote']);
 
     Route::get('/notes/{id}/reviews', [ReviewController::class, 'getReviews']);
