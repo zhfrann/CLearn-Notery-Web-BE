@@ -17,7 +17,7 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => '',
-            'data' => new UserResource($user->load(['semester', 'major', 'faculty', 'notes', 'transactions']))
+            'data' => new UserResource($user->load(['semester', 'major', 'faculty', 'notes', 'transactions', 'favoriteCourses.course']))
         ]);
     }
 

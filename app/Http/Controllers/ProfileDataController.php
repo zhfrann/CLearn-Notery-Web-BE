@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\NoteStatus;
 use App\Models\Transaction;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -31,6 +32,50 @@ class ProfileDataController extends Controller
                 'menunggu' => $menunggu,
                 'diterima' => $diterima,
                 'ditolak' => $ditolak,
+            ]
+        ]);
+    }
+
+    public function productStatusDetail(Request $request, string $id)
+    {
+        $user = $request->user();
+
+        try {
+            $noteStatus = NoteStatus::with(['note.seller'])
+                ->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Status produk tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        // Cek apakah user adalah pemilik note
+        if ($noteStatus->note->seller_id !== $user->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk melihat status produk ini',
+                'data' => null
+            ], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail status produk berhasil diambil',
+            'data' => [
+                'note_status_id' => $noteStatus->note_status_id,
+                'note_id' => $noteStatus->note_id,
+                'judul' => $noteStatus->note->judul,
+                'seller' => [
+                    'seller_id' => $noteStatus->note->seller->user_id,
+                    'nama' => $noteStatus->note->seller->nama,
+                    'username' => $noteStatus->note->seller->username,
+                    'foto_profil' => $noteStatus->note->seller->foto_profil ?
+                        url('storage/' . $noteStatus->note->seller->foto_profil) : null,
+                ],
+                'status' => $noteStatus->status,
+                'catatan' => $noteStatus->catatan,
             ]
         ]);
     }

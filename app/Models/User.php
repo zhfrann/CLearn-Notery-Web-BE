@@ -154,9 +154,9 @@ class User extends Authenticatable
         return $this->hasMany(ReviewVote::class, 'user_id', 'user_id');
     }
 
-    public function favoriteCourses(): BelongsTo
+    public function favoriteCourses(): HasMany
     {
-        return $this->belongsTo(Course::class, 'matkul_favorit', 'course_id');
+        return $this->hasMany(FavoriteCourse::class, 'user_id', 'user_id');
     }
 
     public function likedNotes(): HasMany

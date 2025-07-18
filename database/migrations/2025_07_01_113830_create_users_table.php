@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('semester_id')->nullable()->constrained('semesters', 'semester_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('faculty_id')->nullable()->constrained('faculties', 'faculty_id')->cascadeOnUpdate()->cascadeOnDelete();
             // $table->string('matkul_favorit')->nullable();
-            $table->foreignId('matkul_favorit')->nullable()->constrained('courses', 'course_id')->cascadeOnUpdate()->cascadeOnDelete();
+            // $table->foreignId('matkul_favorit')->nullable()->constrained('courses', 'course_id')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('foto_profil')->nullable();
             // $table->unsignedInteger('jumlah_like')->default(0);
             $table->string('qr_code')->nullable();
