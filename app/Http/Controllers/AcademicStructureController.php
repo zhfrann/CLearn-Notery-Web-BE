@@ -112,4 +112,99 @@ class AcademicStructureController extends Controller
             ]
         ]);
     }
+
+    public function addFavoriteCourse(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'course_id' => 'required|exists:courses,course_id'
+        ]);
+
+        // Cek apakah sudah ada di favorit
+        $exists = $user->favoriteCourses()->where('course_id', $request->course_id)->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mata kuliah sudah ada di favorit',
+                'data' => null
+            ], 400);
+        }
+
+        $favoriteCourse = $user->favoriteCourses()->create([
+            'course_id' => $request->course_id
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menambah mata kuliah favorit',
+            'data' => [
+                'favorite_course_id' => $favoriteCourse->favorite_course_id,
+                'course' => [
+                    'course_id' => $favoriteCourse->course->course_id,
+                    'nama_mk' => $favoriteCourse->course->nama_mk
+                ]
+            ]
+        ]);
+    }
+
+    public function removeFavoriteCourse(Request $request, string $id)
+    {
+        $user = $request->user();
+
+        $favoriteCourse = $user->favoriteCourses()->where('course_id', $id)->first();
+
+        if (!$favoriteCourse) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mata kuliah tidak ada di favorit',
+                'data' => null
+            ], 404);
+        }
+
+        $favoriteCourse->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menghapus mata kuliah favorit',
+            'data' => null
+        ]);
+    }
+
+    public function getFavoriteCourses(Request $request)
+    {
+        $user = $request->user();
+
+        $favoriteCourses = $user->favoriteCourses()
+            ->with('course.major.faculty', 'course.semester')
+            ->get()
+            ->map(function ($favorite) {
+                return [
+                    'favorite_course_id' => $favorite->favorite_course_id,
+                    'course' => [
+                        'course_id' => $favorite->course->course_id,
+                        'nama_mk' => $favorite->course->nama_mk,
+                        'major' => [
+                            'major_id' => $favorite->course->major->major_id,
+                            'nama_jurusan' => $favorite->course->major->nama_jurusan,
+                            'faculty' => [
+                                'faculty_id' => $favorite->course->major->faculty->faculty_id,
+                                'nama_fakultas' => $favorite->course->major->faculty->nama_fakultas,
+                            ]
+                        ],
+                        'semester' => [
+                            'semester_id' => $favorite->course->semester->semester_id,
+                            'nomor_semester' => $favorite->course->semester->nomor_semester,
+                        ]
+                    ]
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar mata kuliah favorit',
+            'data' => $favoriteCourses
+        ]);
+    }
 }

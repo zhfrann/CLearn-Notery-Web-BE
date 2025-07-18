@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/profile/academic', [AcademicStructureController::class, 'updateAcademic']);
     Route::get('/profile/product-status', [ProfileDataController::class, 'productStatus']);
+    Route::get('/profile/product-status/{id}', [ProfileDataController::class, 'productStatusDetail']);
     Route::get('/profile/transactions', [ProfileDataController::class, 'transactions']);
     Route::get('/profile/transactions/{id}', [ProfileDataController::class, 'transactionDetail']);
     // Route::get('/profile/favorites-notes', [ProfileDataController::class, 'favoritesNotes']);
@@ -61,6 +62,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/majors', [AcademicStructureController::class, 'getMajors']);
     Route::get('/semesters', [AcademicStructureController::class, 'getSemesters']);
     Route::get('/courses', [AcademicStructureController::class, 'getCourses']);
+
+    Route::get('/favorite-courses', [AcademicStructureController::class, 'getFavoriteCourses']);
+    Route::post('/favorite-courses', [AcademicStructureController::class, 'addFavoriteCourse']);
+    Route::delete('/favorite-courses/{id}', [AcademicStructureController::class, 'removeFavoriteCourse']);
 
     Route::get('/notes/latest-notes', [NoteController::class, 'latestNotes']);
     Route::get('/notes/most-liked-notes', [NoteController::class, 'mostLikeNotes']);

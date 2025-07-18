@@ -39,6 +39,6 @@ class Course extends Model
 
     public function favoriteByUsers(): HasMany
     {
-        return $this->hasMany(User::class, 'matkul_favorit', 'course_id');
+        return $this->hasMany(FavoriteCourse::class, 'course_id', 'course_id');
     }
 }
