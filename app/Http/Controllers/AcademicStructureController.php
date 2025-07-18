@@ -103,7 +103,7 @@ class AcademicStructureController extends Controller
             'success' => true,
             'message' => 'Data akademik berhasil diperbarui',
             'data' => [
-                'user_id' => $user->id,
+                'user_id' => $user->user_id,
                 'username' => $user->username,
                 'nama' => $user->nama,
                 'faculty_id' => $user->faculty_id,
@@ -168,7 +168,10 @@ class AcademicStructureController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Berhasil menghapus mata kuliah favorit',
-            'data' => null
+            'data' => [
+                'course_id' => $favoriteCourse->course_id,
+                'nama_mk' => $favoriteCourse->course->nama_mk,
+            ]
         ]);
     }
 
