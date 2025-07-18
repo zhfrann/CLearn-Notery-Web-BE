@@ -186,3 +186,17 @@ Content-Type: image/png
 
 < ./path/to/file2.png
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+
+
+
+
+
+
+### Delete Note (Only seller can delete)
+DELETE http://localhost:8000/api/notes/8
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer <token seller here>
+
+{}

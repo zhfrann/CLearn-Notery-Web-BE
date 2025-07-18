@@ -77,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/notes/{id}', [NoteController::class, 'updateNote']);
     Route::get('/notes/{id}/files', [NoteController::class, 'getFiles']);
-    // Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);
+    Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);
     Route::post('/notes/{id}/buy', [NoteController::class, 'buyNote']);
 
     Route::get('/notes/{id}/reviews', [ReviewController::class, 'getReviews']);

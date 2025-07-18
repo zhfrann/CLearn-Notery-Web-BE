@@ -719,7 +719,74 @@ class NoteController extends Controller
         ]);
     }
 
-    public function deleteNote(Request $request, string $id) {}
+    public function deleteNote(Request $request, string $id)
+    {
+        $user = $request->user();
+
+        try {
+            $note = Note::with(['files'])->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        // Cek apakah user adalah pemilik note
+        if ($note->seller_id !== $user->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk menghapus note ini',
+                'data' => null
+            ], 403);
+        }
+
+        // Cek apakah note sudah pernah dibeli (ada transaksi)
+        $hasPurchases = Transaction::where('note_id', $note->note_id)->exists();
+
+        if ($hasPurchases) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak dapat dihapus karena sudah pernah dibeli',
+                'data' => null
+            ], 400);
+        }
+
+        // Simpan data untuk response sebelum dihapus
+        $responseData = [
+            'note_id' => $note->note_id,
+            'judul' => $note->judul,
+        ];
+
+        // Hapus file-file terkait dari storage
+        foreach ($note->files as $file) {
+            if (Storage::disk('public')->exists($file->path_file)) {
+                Storage::disk('public')->delete($file->path_file);
+            }
+        }
+
+        // Hapus gambar preview jika ada
+        if ($note->gambar_preview && Storage::disk('public')->exists($note->gambar_preview)) {
+            Storage::disk('public')->delete($note->gambar_preview);
+        }
+
+        // $note->files()->delete();
+        // $note->noteTags()->delete();
+        // $note->likes()->delete();
+        // $note->savedByUsers()->delete();
+        // $note->reviews()->delete();
+        // $note->noteStatus()->delete();
+
+        // Hapus note
+        $note->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil menghapus note',
+            'data' => $responseData
+        ]);
+    }
 
     public function buyNote(Request $request, string $id)
     {
