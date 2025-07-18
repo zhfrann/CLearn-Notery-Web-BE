@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Faculty;
 use App\Models\Major;
 use App\Models\Semester;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AcademicStructureController extends Controller
@@ -71,6 +72,44 @@ class AcademicStructureController extends Controller
             'success' => true,
             'message' => '',
             'data' => $courses
+        ]);
+    }
+
+    public function updateAcademic(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'faculty_id' => 'nullable|exists:faculties,faculty_id',
+            'major_id' => 'nullable|exists:majors,major_id',
+            'semester_id' => 'nullable|exists:semesters,semester_id',
+        ]);
+
+        if ($request->has('faculty_id')) {
+            $user->faculty_id = $request->faculty_id;
+        }
+
+        if ($request->has('major_id')) {
+            $user->major_id = $request->major_id;
+        }
+
+        if ($request->has('semester_id')) {
+            $user->semester_id = $request->semester_id;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data akademik berhasil diperbarui',
+            'data' => [
+                'user_id' => $user->id,
+                'username' => $user->username,
+                'nama' => $user->nama,
+                'faculty_id' => $user->faculty_id,
+                'major_id' => $user->major_id,
+                'semester_id' => $user->semester_id,
+            ]
         ]);
     }
 }
