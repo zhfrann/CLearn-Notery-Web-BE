@@ -623,7 +623,7 @@ class NoteController extends Controller
         $request->validate([
             'judul' => 'sometimes|string|max:255',
             'deskripsi' => 'sometimes|string',
-            'files.*' => 'sometimes|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,zip,rar,jpg,jpeg,png|max:51200', // max 50MB per file
+            'files.*' => 'sometimes|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,zip,rar,jpg,jpeg,png|max:10240'
         ]);
 
         // Update note fields jika ada di request
@@ -653,18 +653,33 @@ class NoteController extends Controller
             foreach ($request->file('files') as $file) {
                 $originalName = $file->getClientOriginalName();
                 $filename = time() . '_' . $originalName;
-                $path = $file->storeAs('note_files', $filename, 'public');
+                $path = $file->storeAs('note/files', $filename, 'public');
 
                 // Simpan ke database
                 NoteFile::create([
                     'note_id' => $note->note_id,
                     'nama_file' => $originalName,
-                    'path_file' => $path
+                    'path_file' => $path,
+                    'tipe' => $file->getClientOriginalExtension()
                 ]);
             }
 
+            // Update gambar preview jika ada file gambar
+            $firstImage = null;
+            foreach ($request->file('files') as $file) {
+                if (in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png'])) {
+                    $firstImage = time() . '_' . $file->getClientOriginalName();
+                    break;
+                }
+            }
+            if ($firstImage) {
+                $note->update(['gambar_preview' => 'notes/files/' . $firstImage]);
+            }
+
             // Refresh note dengan files terbaru
-            $note->load('files');
+            // Refresh note dengan files terbaru
+            $note->refresh();
+            $note->load(['seller', 'noteStatus', 'course.major.faculty', 'course.semester', 'noteTags.tag', 'files']);
         }
 
         // Format response
@@ -689,15 +704,15 @@ class NoteController extends Controller
             ],
             'prodi' => [
                 'major_id' => $note->course->major->major_id,
-                'nama_program_studi' => $note->course->major->nama_program_studi,
+                'nama_program_studi' => $note->course->major->nama_jurusan,
             ],
             'semester' => [
                 'semester_id' => $note->course->semester->semester_id,
-                'nama_semester' => $note->course->semester->nama_semester,
+                'nama_semester' => $note->course->semester->nomor_semester,
             ],
             'matkul_favorit' => [
                 'course_id' => $note->course->course_id,
-                'nama_matkul' => $note->course->nama_matkul,
+                'nama_matkul' => $note->course->nama_mk,
             ],
             'tags' => $note->noteTags->pluck('tag.nama_tag'),
             'files' => $note->files->map(function ($file) {
