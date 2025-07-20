@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Note;
-use App\Models\Review;
 use App\Models\ReviewVote;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -66,18 +64,18 @@ class ReviewController extends Controller
         ]);
     }
 
-    public function createReview(Request $request, string $id) 
+    public function createReview(Request $request, string $id)
     {
         $request->validate([
-        'review' => 'required|string',
-        'rating' => 'required|numeric|min:0|max:5',
+            'review' => 'required|string',
+            'rating' => 'required|numeric|min:0|max:5',
         ]);
 
         $note = Note::findOrFail($id);
 
         $review = Review::create([
             'note_id' => $note->id,
-            'user_id' => auth()->id(), 
+            'user_id' => $request->user()->user_id,
             'review' => $request->review,
             'rating' => $request->rating,
         ]);
