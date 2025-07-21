@@ -3,7 +3,7 @@
 Clone the project
 
 ```bash
-git clone https://github.com/chevalierlab-sas/CLearn-Notery-Web-BE.git
+git clone https://github.com/zhfrann/CLearn-Notery-Web-BE.git
 ```
 
 Go to the project directory
