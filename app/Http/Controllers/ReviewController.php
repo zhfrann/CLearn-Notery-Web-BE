@@ -67,27 +67,51 @@ class ReviewController extends Controller
     public function createReview(Request $request, string $id)
     {
         $request->validate([
-            'review' => 'required|string',
+            'komentar' => 'required|string',
             'rating' => 'required|numeric|min:0|max:5',
         ]);
 
-        $note = Note::findOrFail($id);
+        try {
+            $note = Note::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        // Cek apakah user sudah pernah review note ini
+        // $existingReview = Review::where('note_id', $note->note_id)
+        //     ->where('user_id', $request->user()->user_id)
+        //     ->first();
+
+        // if ($existingReview) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Anda sudah memberikan review untuk note ini',
+        //         'data' => null
+        //     ], 400);
+        // }
 
         $review = Review::create([
-            'note_id' => $note->id,
+            'note_id' => $note->note_id,
             'user_id' => $request->user()->user_id,
-            'review' => $request->review,
+            'komentar' => $request->komentar,
             'rating' => $request->rating,
+            'tgl_review' => now(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Berhasil menambah ulasan note',
             'data' => [
-                'note_id' => $note->id,
+                'review_id' => $review->review_id,
+                'note_id' => $note->note_id,
                 'judul' => $note->judul,
-                'review' => $review->review,
+                'komentar' => $review->komentar,
                 'rating' => $review->rating,
+                'tgl_review' => $review->tgl_review,
             ]
         ]);
     }
