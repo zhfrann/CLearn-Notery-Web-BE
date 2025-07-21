@@ -24,7 +24,7 @@ Copy and set the .env
 cp .env.example .env
 ```
 
-Configure the DB_DATABASE, DB_USERNAME, DB_PASSWORD
+Configure the DB_DATABASE, DB_USERNAME, DB_PASSWORD. Using MySQL is suggested
 
 Generate Application Key
 
@@ -33,12 +33,6 @@ php artisan key:generate
 ```
 
 Run the migration
-
-```bash
-php artisan migrate
-```
-
-or you can run the seeder to seed initial data
 
 ```bash
 php artisan migrate --seed
