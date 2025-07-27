@@ -95,6 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/reviews/{id}/vote', [ReviewController::class, 'unvoteReview']);
 
     Route::get('/tags', [TagController::class, 'getTags']);
+    Route::get('/tags/{id}', [TagController::class, 'getTagsDetail']);
 
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);
