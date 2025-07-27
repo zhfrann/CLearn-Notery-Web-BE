@@ -857,7 +857,7 @@ class NoteController extends Controller
         $transaction = Transaction::create([
             'note_id' => $note->note_id,
             'buyer_id' => $user->user_id,
-            'status' => 'selesai',
+            'status' => 'paid',
             // 'status' => 'menunggu', // Status awal pending, akan diubah admin/seller
             'tgl_transaksi' => now(),
             // 'catatan' => 'Transaksi pembelian note: ' . $note->judul,
