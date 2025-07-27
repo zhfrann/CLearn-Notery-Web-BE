@@ -14,6 +14,10 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Midtrans\Config;
+use Midtrans\Snap;
+use Midtrans;
+
 
 class NoteController extends Controller
 {
@@ -563,7 +567,7 @@ class NoteController extends Controller
 
         $hasPurchased = Transaction::where('note_id', $note->note_id)
             ->where('buyer_id', $user->user_id)
-            ->where('status', 'selesai')
+            ->where('status', 'paid')
             ->exists();
 
         // User hanya bisa akses files jika sudah membeli atau adalah pemilik
@@ -873,6 +877,185 @@ class NoteController extends Controller
                 'status' => $transaction->status,
                 'bukti_pembayaran' => url('storage/' . $path),
             ]
+        ]);
+    }
+
+    public function buyNoteMidtrans(Request $request, string $id)
+    {
+        $buyer = $request->user();
+
+        try {
+            $note = Note::with(['seller', 'course'])
+                ->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan',
+                'data' => null
+            ], 404);
+        }
+
+        // Validasi buyer tidak bisa beli note sendiri
+        if ($note->seller_id === $buyer->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak dapat membeli note sendiri',
+                'data' => null
+            ], 400);
+        }
+
+        // Cek apakah user sudah pernah membeli note ini
+        $existingTransaction = Transaction::where('note_id', $note->note_id)
+            ->where('buyer_id', $buyer->user_id)
+            ->first();
+
+        if ($existingTransaction) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda sudah melakukan transaksi untuk note ini',
+                'data' => null
+            ], 400);
+        }
+
+        // Set Midtrans configuration
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
+
+        // Generate unique order ID
+        $orderId = 'NOTE-' . $note->note_id . '-' . $buyer->user_id . '-' . time();
+
+        // Calculate all fees
+        $notePrice = $note->harga;
+        $platformFeeRate = 0.10; // 10%
+        $midtransFeeRate = 0.029; // 2.9%
+        $midtransFixedFee = 2000; // Rp 2,000
+
+        // Calculate fees
+        $platformFee = round($notePrice * $platformFeeRate);
+        $midtransFee = round(($notePrice * $midtransFeeRate) + $midtransFixedFee);
+
+        // Total yang dibayar buyer
+        $grossAmount = $notePrice + $platformFee + $midtransFee;
+
+        // Amount yang masuk ke seller (note price aja)
+        $sellerAmount = $notePrice;
+
+        // Prepare Midtrans parameters
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount,
+            ],
+            'customer_details' => [
+                'first_name' => $buyer->nama ?? $buyer->username,
+                'last_name' => '',
+                'email' => $buyer->email,
+            ],
+            'item_details' => [
+                [
+                    'id' => $note->note_id,
+                    'price' => $notePrice,
+                    'quantity' => 1,
+                    'name' => $note->judul,
+                    'category' => 'Digital Product',
+                ],
+                [
+                    'id' => 'platform_fee',
+                    'price' => $platformFee,
+                    'quantity' => 1,
+                    'name' => 'Platform Fee (10%)',
+                    'category' => 'Service Fee',
+                ],
+                [
+                    'id' => 'payment_fee',
+                    'price' => $midtransFee,
+                    'quantity' => 1,
+                    'name' => 'Payment Processing Fee',
+                    'category' => 'Service Fee',
+                ]
+            ]
+        ];
+
+        try {
+            // Generate Snap Token
+            $snapToken = Snap::getSnapToken($params);
+
+            // Save transaction to database
+            $transaction = Transaction::create([
+                'buyer_id' => $buyer->user_id,
+                'note_id' => $note->note_id,
+                'midtrans_order_id' => $orderId,
+                'snap_token' => $snapToken,
+                'jumlah' => $grossAmount,           // Total yang dibayar buyer
+                'platform_fee' => $platformFee,    // Fee untuk platform
+                'seller_amount' => $sellerAmount,  // Amount untuk seller
+                'status' => 'pending',
+                'tgl_transaksi' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Berhasil membuat transaksi',
+                'data' => [
+                    'transaction_id' => $transaction->transaction_id,
+                    'order_id' => $orderId,
+                    'snap_token' => $snapToken,
+                    'breakdown' => [
+                        'note_price' => $notePrice,
+                        'platform_fee' => $platformFee,
+                        'payment_fee' => $midtransFee,
+                        'total_amount' => $grossAmount,
+                        'seller_receives' => $sellerAmount,
+                    ],
+                    'note' => [
+                        'note_id' => $note->note_id,
+                        'judul' => $note->judul,
+                        'harga' => $note->harga,
+                        'seller' => [
+                            'seller_id' => $note->seller->user_id,
+                            'nama' => $note->seller->nama,
+                            'username' => $note->seller->username,
+                        ]
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat transaksi: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
+    }
+
+    // POST /api/payment/manual-update
+    public function manualUpdatePayment(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|string',
+            'transaction_status' => 'required|string',
+            'transaction_id' => 'required|string',
+            'payment_type' => 'required|string',
+        ]);
+
+        $transaction = Transaction::where('midtrans_order_id', $request->order_id)->first();
+
+        if (!$transaction) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+
+        // Update transaction
+        $transaction->update([
+            'midtrans_transaction_id' => $request->transaction_id,
+            'payment_method' => $request->payment_type,
+            'status' => $request->transaction_status === 'settlement' ? 'paid' : 'failed'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment status updated successfully'
         ]);
     }
 }
