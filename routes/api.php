@@ -6,6 +6,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileDataController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\TagController;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Carbon\Carbon;
@@ -83,7 +84,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notes/{id}', [NoteController::class, 'updateNote']);
     Route::get('/notes/{id}/files', [NoteController::class, 'getFiles']);
     Route::delete('/notes/{id}', [NoteController::class, 'deleteNote']);
-    Route::post('/notes/{id}/buy', [NoteController::class, 'buyNote']);
+    // Route::post('/notes/{id}/buy', [NoteController::class, 'buyNote']);
+    Route::post('/notes/{id}/buy', [NoteController::class, 'buyNoteMidtrans']);
+    Route::post('/payment/manual-update', [NoteController::class, 'manualUpdatePayment']);
 
     Route::get('/notes/{id}/reviews', [ReviewController::class, 'getReviews']);
     Route::post('/notes/{id}/reviews', [ReviewController::class, 'createReview']);
@@ -93,6 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews/{id}/vote', [ReviewController::class, 'voteReview']);
     Route::delete('/reviews/{id}/vote', [ReviewController::class, 'unvoteReview']);
 
+    Route::get('/tags', [TagController::class, 'getTags']);
+    Route::get('/tags/{id}', [TagController::class, 'getTagsDetail']);
 
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);
