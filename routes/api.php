@@ -6,6 +6,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileDataController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\TagController;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Carbon\Carbon;
@@ -93,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews/{id}/vote', [ReviewController::class, 'voteReview']);
     Route::delete('/reviews/{id}/vote', [ReviewController::class, 'unvoteReview']);
 
+    Route::get('/tags', [TagController::class, 'getTags']);
 
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);
