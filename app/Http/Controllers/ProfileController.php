@@ -112,7 +112,7 @@ class ProfileController extends Controller
 
         // Notes dibeli oleh user (hanya transaksi yang success dan note diterima)
         $notesDibeli = Transaction::where('buyer_id', $user->user_id)
-            ->where('status', 'selesai')
+            ->where('status', 'paid')
             ->whereHas('note.noteStatus', fn($q) => $q->where('status', 'diterima'))
             ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.likes', 'note.savedByUsers', 'note.transactions'])
             ->get()

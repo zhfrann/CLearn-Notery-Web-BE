@@ -67,7 +67,7 @@ class InteractionSeeder extends Seeder
                     Transaction::create([
                         'note_id' => $note->note_id,
                         'buyer_id' => $buyerId,
-                        'status' => 'selesai',
+                        'status' => 'paid',
                         'tgl_transaksi' => now()->subDays(rand(1, 30)),
                         'catatan' => fake()->sentence(),
                         'bukti_pembayaran' => $buktiBayar,

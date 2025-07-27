@@ -23,7 +23,14 @@ class Transaction extends Model
         'status',
         'tgl_transaksi',
         'catatan',
-        'bukti_pembayaran'
+        'bukti_pembayaran',
+        'jumlah',
+        'midtrans_order_id',
+        'midtrans_transaction_id',
+        'snap_token',
+        'payment_method',
+        'platform_fee',
+        'seller_amount'
     ];
 
     public function note(): BelongsTo
