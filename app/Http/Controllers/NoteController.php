@@ -904,18 +904,34 @@ class NoteController extends Controller
             ], 400);
         }
 
-        // Cek apakah user sudah pernah membeli note ini
-        $existingTransaction = Transaction::where('note_id', $note->note_id)
-            ->where('buyer_id', $buyer->user_id)
-            ->first();
-
-        if ($existingTransaction) {
+        // Validasi hanya note dengan status 'diterima' yang bisa dibeli
+        if ($note->noteStatus->status !== 'diterima') {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda sudah melakukan transaksi untuk note ini',
+                'message' => 'Status note ini tidak bisa dibeli',
                 'data' => null
             ], 400);
         }
+
+        // Cek apakah user sudah pernah membeli note ini dengan status 'paid'
+        $paidTransaction = Transaction::where('note_id', $note->note_id)
+            ->where('buyer_id', $buyer->user_id)
+            ->where('status', 'paid')
+            ->first();
+
+        if ($paidTransaction) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda sudah membeli note ini',
+                'data' => null
+            ], 400);
+        }
+
+        // Cek apakah ada transaksi pending yang bisa diupdate
+        $pendingTransaction = Transaction::where('note_id', $note->note_id)
+            ->where('buyer_id', $buyer->user_id)
+            ->where('status', 'pending')
+            ->first();
 
         // Set Midtrans configuration
         Config::$serverKey = config('midtrans.server_key');
@@ -982,18 +998,32 @@ class NoteController extends Controller
             // Generate Snap Token
             $snapToken = Snap::getSnapToken($params);
 
-            // Save transaction to database
-            $transaction = Transaction::create([
-                'buyer_id' => $buyer->user_id,
-                'note_id' => $note->note_id,
-                'midtrans_order_id' => $orderId,
-                'snap_token' => $snapToken,
-                'jumlah' => $grossAmount,           // Total yang dibayar buyer
-                'platform_fee' => $platformFee,    // Fee untuk platform
-                'seller_amount' => $sellerAmount,  // Amount untuk seller
-                'status' => 'pending',
-                'tgl_transaksi' => now(),
-            ]);
+            // Save or update transaction to database
+            if ($pendingTransaction) {
+                // Update existing pending transaction
+                $pendingTransaction->update([
+                    'midtrans_order_id' => $orderId,
+                    'snap_token' => $snapToken,
+                    'jumlah' => $grossAmount,
+                    'platform_fee' => $platformFee,
+                    'seller_amount' => $sellerAmount,
+                    'tgl_transaksi' => now(),
+                ]);
+                $transaction = $pendingTransaction;
+            } else {
+                // Save transaction to database
+                $transaction = Transaction::create([
+                    'buyer_id' => $buyer->user_id,
+                    'note_id' => $note->note_id,
+                    'midtrans_order_id' => $orderId,
+                    'snap_token' => $snapToken,
+                    'jumlah' => $grossAmount,           // Total yang dibayar buyer
+                    'platform_fee' => $platformFee,    // Fee untuk platform
+                    'seller_amount' => $sellerAmount,  // Amount untuk seller
+                    'status' => 'pending',
+                    'tgl_transaksi' => now(),
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
