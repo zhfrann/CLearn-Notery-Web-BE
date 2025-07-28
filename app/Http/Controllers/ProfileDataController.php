@@ -145,8 +145,8 @@ class ProfileDataController extends Controller
                     'major_id' => $transaction->note->course->major->major_id,
                     'nama_program_studi' => $transaction->note->course->major->nama_program_studi,
                 ],
-                'bukti_pembayaran_url' => $transaction->bukti_pembayaran ?
-                    url('storage/' . $transaction->bukti_pembayaran) : null,
+                // 'bukti_pembayaran_url' => $transaction->bukti_pembayaran ?
+                //     url('storage/' . $transaction->bukti_pembayaran) : null,
                 'nominal' => $transaction->note->harga,
                 'isReviewed' => $isReviewed,
                 'created_at' => $transaction->created_at->toIso8601String(),
