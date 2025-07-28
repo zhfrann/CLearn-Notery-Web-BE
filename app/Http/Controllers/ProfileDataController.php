@@ -84,11 +84,11 @@ class ProfileDataController extends Controller
     {
         $user = $request->user();
 
-        $transactions = Transaction::where('buyer_id', $user->user_id)
-            ->with(['note.noteTags.tag'])
-            ->orderByDesc('created_at')
+        // Transaksi sebagai buyer
+        $buyerTransactions = Transaction::where('buyer_id', $user->user_id)
+            ->with(['note.seller', 'note.noteTags.tag'])
             ->get()
-            ->map(function ($transaction) {
+            ->map(function ($transaction) use ($user) {
                 return [
                     'transaction_id' => $transaction->transaction_id,
                     'note_id' => $transaction->note->note_id,
@@ -96,14 +96,49 @@ class ProfileDataController extends Controller
                     'tags' => $transaction->note->noteTags->pluck('tag.nama_tag'),
                     'harga' => $transaction->note->harga,
                     'status' => $transaction->status,
+                    'role' => 'buyer', // User sebagai pembeli
+                    'other_party' => [
+                        'user_id' => $transaction->note->seller->user_id,
+                        'nama' => $transaction->note->seller->nama,
+                        'username' => $transaction->note->seller->username,
+                    ],
                     'created_at' => $transaction->created_at->toIso8601String(),
                 ];
             });
 
+        // Transaksi sebagai seller
+        $sellerTransactions = Transaction::whereHas('note', function ($q) use ($user) {
+            $q->where('seller_id', $user->user_id);
+        })
+            ->with(['buyer', 'note.noteTags.tag'])
+            ->get()
+            ->map(function ($transaction) use ($user) {
+                return [
+                    'transaction_id' => $transaction->transaction_id,
+                    'note_id' => $transaction->note->note_id,
+                    'judul' => $transaction->note->judul,
+                    'tags' => $transaction->note->noteTags->pluck('tag.nama_tag'),
+                    'harga' => $transaction->note->harga,
+                    'status' => $transaction->status,
+                    'role' => 'seller', // User sebagai penjual
+                    'other_party' => [
+                        'user_id' => $transaction->buyer->user_id,
+                        'nama' => $transaction->buyer->nama,
+                        'username' => $transaction->buyer->username,
+                    ],
+                    'created_at' => $transaction->created_at->toIso8601String(),
+                ];
+            });
+
+        // Gabungkan dan urutkan berdasarkan waktu terbaru
+        $allTransactions = $buyerTransactions->concat($sellerTransactions)
+            ->sortByDesc('created_at')
+            ->values();
+
         return response()->json([
             'success' => true,
-            'message' => 'Daftar transaksi pengguna',
-            'data' => $transactions
+            'message' => 'Riwayat transaksi pengguna',
+            'data' => $allTransactions
         ]);
     }
 
@@ -111,32 +146,52 @@ class ProfileDataController extends Controller
     {
         $user = $request->user();
 
-        try {
-            $transaction = Transaction::where('transaction_id', $id)
-                ->where('buyer_id', $user->user_id)
-                ->with(['note.course.major.faculty', 'note.reviews'])
-                ->firstOrFail();
-        } catch (ModelNotFoundException $e) {
+        // Cari transaksi dimana user adalah buyer ATAU seller
+        $transaction = Transaction::where('transaction_id', $id)
+            ->where(function ($q) use ($user) {
+                $q->where('buyer_id', $user->user_id)
+                    ->orWhereHas('note', function ($subQ) use ($user) {
+                        $subQ->where('seller_id', $user->user_id);
+                    });
+            })
+            ->with(['note.course.major.faculty', 'note.reviews', 'buyer', 'note.seller'])
+            ->first();
+
+        if (!$transaction) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaksi tidak ditemukan',
             ], 404);
         }
 
-        // Cek apakah user sudah review note ini
-        $isReviewed = $transaction->note->reviews()
-            ->where('user_id', $user->user_id)
-            ->exists();
+        // Tentukan role user
+        $userRole = $transaction->buyer_id === $user->user_id ? 'buyer' : 'seller';
+
+        // Tentukan pihak lawan
+        $otherParty = $userRole === 'buyer'
+            ? $transaction->note->seller
+            : $transaction->buyer;
+
+        // Cek apakah user sudah review note ini (hanya untuk buyer)
+        $isReviewed = $userRole === 'buyer'
+            ? $transaction->note->reviews()->where('user_id', $user->user_id)->exists()
+            : null;
 
         return response()->json([
             'success' => true,
-            'message' => 'Detail transaksi pengguna',
+            'message' => 'Detail transaksi',
             'data' => [
                 'transaction_id' => $transaction->transaction_id,
                 'note_id' => $transaction->note->note_id,
                 'judul' => $transaction->note->judul,
                 'harga' => $transaction->note->harga,
                 'status' => $transaction->status,
+                'role' => $userRole,
+                'other_party' => [
+                    'user_id' => $otherParty->user_id,
+                    'nama' => $otherParty->nama,
+                    'username' => $otherParty->username,
+                ],
                 'fakultas' => [
                     'faculty_id' => $transaction->note->course->major->faculty->faculty_id,
                     'nama_fakultas' => $transaction->note->course->major->faculty->nama_fakultas,
@@ -145,10 +200,8 @@ class ProfileDataController extends Controller
                     'major_id' => $transaction->note->course->major->major_id,
                     'nama_program_studi' => $transaction->note->course->major->nama_program_studi,
                 ],
-                // 'bukti_pembayaran_url' => $transaction->bukti_pembayaran ?
-                //     url('storage/' . $transaction->bukti_pembayaran) : null,
                 'nominal' => $transaction->note->harga,
-                'isReviewed' => $isReviewed,
+                'isReviewed' => $isReviewed, // null untuk seller
                 'created_at' => $transaction->created_at->toIso8601String(),
             ]
         ]);

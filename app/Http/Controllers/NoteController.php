@@ -9,6 +9,7 @@ use App\Models\NoteStatus;
 use App\Models\NoteTag;
 use App\Models\Tag;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -189,7 +190,65 @@ class NoteController extends Controller
         ]);
     }
 
-    public function topCreator(Request $request) {}
+    public function topCreator(Request $request)
+    {
+        $topCreators = User::whereHas('notes', function ($q) {
+            // Hanya notes yang statusnya diterima
+            $q->whereHas('noteStatus', fn($status) => $status->where('status', 'diterima'));
+        })
+            ->with(['notes' => function ($q) {
+                $q->whereHas('noteStatus', fn($status) => $status->where('status', 'diterima'))
+                    ->with(['reviews', 'likes', 'transactions']);
+            }])
+            ->get()
+            ->map(function ($user) {
+                // Hitung total likes dari semua notes yang diterima
+                $totalLike = $user->notes->sum(function ($note) {
+                    return $note->likes->count();
+                });
+
+                // Hitung rata-rata rating dari semua reviews notes yang diterima
+                $allReviews = $user->notes->flatMap(function ($note) {
+                    return $note->reviews;
+                });
+                $avgRating = $allReviews->isNotEmpty() ?
+                    round($allReviews->avg('rating'), 2) : 0;
+
+                // Hitung total catatan (notes) yang statusnya diterima
+                $totalCatatan = $user->notes->count();
+
+                // Hitung total terjual dari semua transaksi paid
+                $totalTerjual = $user->notes->sum(function ($note) {
+                    return $note->transactions->where('status', 'paid')->count();
+                });
+
+                return [
+                    'user_id' => $user->user_id,
+                    'nama' => $user->nama,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'foto_profil_url' => $user->foto_profil ?
+                        url('storage/' . $user->foto_profil) : null,
+                    'total_like' => $totalLike,
+                    'rating' => $avgRating,
+                    'catatan' => $totalCatatan,
+                    'terjual' => $totalTerjual
+                ];
+            })
+            ->filter(function ($creator) {
+                // Filter hanya yang punya rating > 0 (pernah di-review)
+                return $creator['rating'] > 0;
+            })
+            ->sortByDesc('rating') // Urutkan berdasarkan rating tertinggi
+            ->take(10) // Ambil 10 teratas
+            ->values(); // Reset array keys
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Top Kreator',
+            'data' => $topCreators
+        ]);
+    }
 
     public function createNote(Request $request)
     {

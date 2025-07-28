@@ -70,7 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/notes/latest-notes', [NoteController::class, 'latestNotes']);
     Route::get('/notes/most-liked-notes', [NoteController::class, 'mostLikeNotes']);
-    Route::post('/top-creator', [NoteController::class, 'topCreator']);
+    Route::get('/top-creators', [NoteController::class, 'topCreator']);
 
     Route::get('/notes', [NoteController::class, 'getAllNotes']);
     Route::post('/notes', [NoteController::class, 'createNote']);
