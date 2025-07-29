@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
+use App\Models\Faculty;
+use App\Models\Major;
+use App\Models\Note;
+use App\Models\Semester;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
@@ -76,6 +82,18 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Validasi query parameters untuk filtering
+        $validated = $request->validate([
+            'nama' => 'nullable|string|max:255',
+            'course_id' => 'nullable|exists:courses,course_id',
+            'faculty_id' => 'nullable|exists:faculties,faculty_id',
+            'major_id' => 'nullable|exists:majors,major_id',
+            'semester_id' => 'nullable|exists:semesters,semester_id',
+            'rating' => 'nullable|numeric|min:1|max:5',
+            'tag_names' => 'nullable|array',
+            'tag_names.*' => 'string|max:255',
+        ]);
+
         // Helper untuk format data note
         $formatNote = function ($note) use ($user) {
             return [
@@ -99,26 +117,117 @@ class ProfileController extends Controller
                 'tags' => $note->noteTags->pluck('tag.nama_tag'),
                 'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
                 'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
+                'isBuy' => $user ? !Transaction::where('note_id', $note->note_id)
+                    ->where('buyer_id', $user->user_id)
+                    ->where('status', 'paid')
+                    ->exists() : false,
                 'created_at' => $note->created_at->toIso8601String(),
             ];
         };
 
-        // Notes dijual oleh user (note status harus diterima)
-        $notesDijual = $user->notes()
-            ->whereHas('noteStatus', fn($q) => $q->where('status', 'diterima'))
-            ->with(['seller', 'noteTags.tag', 'reviews', 'likes', 'savedByUsers', 'transactions'])
-            ->get()
-            ->map($formatNote);
+        // 1. Notes dijual (yang BISA DIBELI oleh user) - dengan filtering
+        $notesDijualQuery = Note::whereHas('noteStatus', fn($q) => $q->where('status', 'diterima'))
+            ->with(['seller', 'noteTags.tag', 'reviews', 'likes', 'savedByUsers', 'transactions', 'course.semester.major.faculty']);
 
-        // Notes dibeli oleh user (hanya transaksi yang success dan note diterima)
-        $notesDibeli = Transaction::where('buyer_id', $user->user_id)
+        // Apply filtering pada notes yang bisa dibeli
+        if (!empty($validated['nama'])) {
+            $notesDijualQuery->where('judul', 'LIKE', '%' . $validated['nama'] . '%');
+        }
+
+        if (!empty($validated['course_id'])) {
+            $notesDijualQuery->where('course_id', $validated['course_id']);
+        }
+
+        if (!empty($validated['faculty_id'])) {
+            $notesDijualQuery->whereHas('course.semester.major.faculty', function ($q) use ($validated) {
+                $q->where('faculty_id', $validated['faculty_id']);
+            });
+        }
+
+        if (!empty($validated['major_id'])) {
+            $notesDijualQuery->whereHas('course.semester.major', function ($q) use ($validated) {
+                $q->where('major_id', $validated['major_id']);
+            });
+        }
+
+        if (!empty($validated['semester_id'])) {
+            $notesDijualQuery->whereHas('course.semester', function ($q) use ($validated) {
+                $q->where('semester_id', $validated['semester_id']);
+            });
+        }
+
+        if (!empty($validated['rating'])) {
+            $notesDijualQuery->whereIn('note_id', function ($query) use ($validated) {
+                $query->select('note_id')
+                    ->from('reviews')
+                    ->groupBy('note_id')
+                    ->havingRaw('AVG(rating) >= ?', [$validated['rating']]);
+            });
+        }
+
+        if (!empty($validated['tag_names']) && is_array($validated['tag_names'])) {
+            $notesDijualQuery->whereHas('noteTags.tag', function ($q) use ($validated) {
+                $q->whereIn('nama_tag', $validated['tag_names']);
+            });
+        }
+
+        $notesDijual = $notesDijualQuery->orderBy('created_at', 'desc')->get()->map($formatNote);
+
+        // 2. Notes dibeli oleh user (dengan filtering)
+        $notesDibeliQuery = Transaction::where('buyer_id', $user->user_id)
             ->where('status', 'paid')
             ->whereHas('note.noteStatus', fn($q) => $q->where('status', 'diterima'))
-            ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.likes', 'note.savedByUsers', 'note.transactions'])
-            ->get()
-            ->map(fn($tx) => $formatNote($tx->note));
+            ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.likes', 'note.savedByUsers', 'note.transactions', 'note.course.semester.major.faculty']);
 
-        // Notes difavoritkan user (saved_notes), hanya note yang diterima
+        // Apply filtering pada notes yang dibeli
+        if (!empty($validated['nama'])) {
+            $notesDibeliQuery->whereHas('note', function ($q) use ($validated) {
+                $q->where('judul', 'LIKE', '%' . $validated['nama'] . '%');
+            });
+        }
+
+        if (!empty($validated['course_id'])) {
+            $notesDibeliQuery->whereHas('note', function ($q) use ($validated) {
+                $q->where('course_id', $validated['course_id']);
+            });
+        }
+
+        if (!empty($validated['faculty_id'])) {
+            $notesDibeliQuery->whereHas('note.course.semester.major.faculty', function ($q) use ($validated) {
+                $q->where('faculty_id', $validated['faculty_id']);
+            });
+        }
+
+        if (!empty($validated['major_id'])) {
+            $notesDibeliQuery->whereHas('note.course.semester.major', function ($q) use ($validated) {
+                $q->where('major_id', $validated['major_id']);
+            });
+        }
+
+        if (!empty($validated['semester_id'])) {
+            $notesDibeliQuery->whereHas('note.course.semester', function ($q) use ($validated) {
+                $q->where('semester_id', $validated['semester_id']);
+            });
+        }
+
+        if (!empty($validated['rating'])) {
+            $notesDibeliQuery->whereIn('note_id', function ($query) use ($validated) {
+                $query->select('note_id')
+                    ->from('reviews')
+                    ->groupBy('note_id')
+                    ->havingRaw('AVG(rating) >= ?', [$validated['rating']]);
+            });
+        }
+
+        if (!empty($validated['tag_names']) && is_array($validated['tag_names'])) {
+            $notesDibeliQuery->whereHas('note.noteTags.tag', function ($q) use ($validated) {
+                $q->whereIn('nama_tag', $validated['tag_names']);
+            });
+        }
+
+        $notesDibeli = $notesDibeliQuery->orderBy('created_at', 'desc')->get()->map(fn($tx) => $formatNote($tx->note));
+
+        // Notes dibeli oleh user (hanya transaksi yang success dan note diterima) dengan filtering
         $favoriteNotes = $user->savedNotes()
             ->whereHas('note.noteStatus', fn($q) => $q->where('status', 'diterima'))
             ->with(['note.seller', 'note.noteTags.tag', 'note.reviews', 'note.likes', 'note.savedByUsers', 'note.transactions'])

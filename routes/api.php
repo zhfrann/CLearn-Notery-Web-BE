@@ -99,6 +99,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/reviews/{id}/vote', [ReviewController::class, 'unvoteReview']);
 
     Route::get('/tags', [TagController::class, 'getTags']);
+    Route::get('/tags/popular', [TagController::class, 'getMostSearchTags']);
     Route::get('/tags/{id}', [TagController::class, 'getTagsDetail']);
 
     Route::post('/reports', [ReportController::class, 'submitReport']);
