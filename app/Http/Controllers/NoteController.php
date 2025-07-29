@@ -17,8 +17,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Midtrans\Config;
 use Midtrans\Snap;
-use Midtrans;
-
 
 class NoteController extends Controller
 {

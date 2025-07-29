@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\AcademicStructureController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileDataController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TagController;
 use App\Http\Resources\UserResource;
@@ -99,10 +101,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tags', [TagController::class, 'getTags']);
     Route::get('/tags/{id}', [TagController::class, 'getTagsDetail']);
 
+    Route::post('/reports', [ReportController::class, 'submitReport']);
+    Route::get('/reports/types', [ReportController::class, 'getReportTypes']);
+
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);
     //     // Route::get(/{id}/reviews, [...]);
     // });
 
     // ...
+});
+
+Route::prefix('/admin')->middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+
+    Route::get('/reports', [AdminController::class, 'getAllReports']);
+
+    Route::get('/notes-submission', [AdminController::class, 'getAllNotesSubmission']);
 });
