@@ -89,6 +89,10 @@ class NoteController extends Controller
                 }),
                 'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
                 'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
+                'isBuy' => $user ? Transaction::where('note_id', $note->note_id)
+                    ->where('buyer_id', $user->user_id)
+                    ->where('status', 'paid')
+                    ->exists() : false,
                 'created_at' => $note->created_at->toIso8601String(),
             ];
         });
