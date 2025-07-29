@@ -22,8 +22,20 @@ class NoteController extends Controller
 {
     public function getAllNotes(Request $request)
     {
+        // Validasi query parameters untuk pagination
+        $validated = $request->validate([
+            'size' => 'nullable|integer|min:1|max:100',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        // Set default values
+        $size = $validated['size'] ?? 15;
+        $page = $validated['page'] ?? 1;
+
         $user = $request->user();
-        $notes = Note::with([
+
+        // Query dengan eager loading dan pagination
+        $notesQuery = Note::query()->with([
             'course.major.faculty',
             'course.semester',
             'noteTags.tag',
@@ -32,9 +44,11 @@ class NoteController extends Controller
             'savedByUsers',
             'transactions',
             'reviews',
-        ])->get();
+        ])->orderBy('note_id', 'asc');
 
-        $result = $notes->map(function ($note) use ($user) {
+        $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
+
+        $result = $paginatedNotes->getCollection()->map(function ($note) use ($user) {
             $course = $note->course;
             $major = $course->major ?? null;
             $faculty = $major ? $major->faculty : null;
@@ -78,13 +92,13 @@ class NoteController extends Controller
                 'tags' => $note->noteTags->map(function ($nt) {
                     return $nt->tag->nama_tag ?? null;
                 })->filter()->values(),
-                'files' => $note->files->map(function ($file) {
-                    return [
-                        'nama_file' => $file->nama_file,
-                        'path_file' => url(asset('storage/' . $file->path_file)),
-                        'created_at' => $file->created_at->toIso8601String()
-                    ];
-                }),
+                // 'files' => $note->files->map(function ($file) {
+                //     return [
+                //         'nama_file' => $file->nama_file,
+                //         'path_file' => url(asset('storage/' . $file->path_file)),
+                //         'created_at' => $file->created_at->toIso8601String()
+                //     ];
+                // }),
                 'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
                 'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
                 'isBuy' => $user ? Transaction::where('note_id', $note->note_id)
@@ -95,108 +109,206 @@ class NoteController extends Controller
             ];
         });
 
+        // Metadata pagination (opsional, bisa dihapus jika tidak perlu)
+        $paginationMeta = [
+            'current_page' => $paginatedNotes->currentPage(),
+            'per_page' => $paginatedNotes->perPage(),
+            'total' => $paginatedNotes->total(),
+            'last_page' => $paginatedNotes->lastPage(),
+            'from' => $paginatedNotes->firstItem(),
+            'to' => $paginatedNotes->lastItem(),
+            'has_more_pages' => $paginatedNotes->hasMorePages(),
+            'path' => $paginatedNotes->path(),
+            'links' => [
+                'first' => $paginatedNotes->url(1),
+                'last' => $paginatedNotes->url($paginatedNotes->lastPage()),
+                'prev' => $paginatedNotes->previousPageUrl(),
+                'next' => $paginatedNotes->nextPageUrl(),
+            ]
+        ];
+
         return response()->json([
             'success' => true,
             'message' => 'Berhasil mengambil semua note',
-            'data' => $result
+            'data' => $result,
+            'pagination' => $paginationMeta,
         ]);
     }
 
     public function latestNotes(Request $request)
     {
+        // Validasi query parameters untuk pagination
+        $validated = $request->validate([
+            'size' => 'nullable|integer|min:1|max:100',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        // Set default values
+        $size = $validated['size'] ?? 15;
+        $page = $validated['page'] ?? 1;
+
         $user = $request->user();
-        $notes = Note::approved()
-            ->with(['noteTags.tag', 'savedByUsers', 'reviews', 'likes', 'savedByUsers', 'transactions'])
+
+        // Query dengan eager loading dan pagination
+        $notesQuery = Note::approved()
+            ->with([
+                'seller:user_id,nama,username,foto_profil',
+                'noteTags.tag:tag_id,nama_tag',
+                'savedByUsers',
+                'reviews',
+                'likes',
+                'transactions',
+            ])
             ->withCount(['transactions as jumlah_terjual' => function ($query) {
                 $query->where('status', 'success');
             }])
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function ($note) use ($user) {
-                return [
-                    'note_id' => $note->note_id,
-                    'seller' => [
-                        'seller_id' => $note->seller_id,
-                        'name' => $note->seller->name,
-                        'username' => $note->seller->username,
-                        'foto_profil' => url($note->seller->foto_profil_url),
-                        'isTopCreator' => null,
-                    ],
-                    'judul' => $note->judul,
-                    'deskripsi' => $note->deskripsi,
-                    'harga' => $note->harga,
-                    'jumlah_like' => $note->likes()->count(),
-                    'jumlah_favorit' => $note->savedByUsers->count(),
-                    'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
-                    'jumlah_terjual' => $note->jumlah_terjual,
-                    'rating' => round($note->reviews->avg('rating') ?? 0, 2),
-                    'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
-                    'tags' => $note->noteTags->map(function ($noteTag) {
-                        return $noteTag->tag->nama_tag ?? null;
-                    })->filter()->values(),
-                    'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
-                    'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
-                    'isBuy' => $user ? Transaction::where('note_id', $note->note_id)
-                        ->where('buyer_id', $user->user_id)
-                        ->where('status', 'paid')
-                        ->exists() : false,
-                    'created_at' => $note->created_at->toIso8601String(),
-                ];
-            });
+            ->orderByDesc('created_at');
+
+        $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
+
+        $formattedNotes = $paginatedNotes->getCollection()->map(function ($note) use ($user) {
+            return [
+                'note_id' => $note->note_id,
+                'seller' => [
+                    'seller_id' => $note->seller_id,
+                    'nama' => $note->seller->nama,
+                    'username' => $note->seller->username,
+                    'foto_profil' => url($note->seller->foto_profil_url),
+                    'isTopCreator' => null,
+                ],
+                'judul' => $note->judul,
+                'deskripsi' => $note->deskripsi,
+                'harga' => $note->harga,
+                'jumlah_like' => $note->likes()->count(),
+                'jumlah_favorit' => $note->savedByUsers->count(),
+                'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
+                'jumlah_terjual' => $note->jumlah_terjual,
+                'rating' => round($note->reviews->avg('rating') ?? 0, 2),
+                'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
+                'tags' => $note->noteTags->map(function ($noteTag) {
+                    return $noteTag->tag->nama_tag ?? null;
+                })->filter()->values(),
+                'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
+                'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
+                'isBuy' => $user ? Transaction::where('note_id', $note->note_id)
+                    ->where('buyer_id', $user->user_id)
+                    ->where('status', 'paid')
+                    ->exists() : false,
+                'created_at' => $note->created_at->toIso8601String(),
+            ];
+        });
+
+        // Metadata pagination (opsional, bisa dihapus jika tidak perlu)
+        $paginationMeta = [
+            'current_page' => $paginatedNotes->currentPage(),
+            'per_page' => $paginatedNotes->perPage(),
+            'total' => $paginatedNotes->total(),
+            'last_page' => $paginatedNotes->lastPage(),
+            'from' => $paginatedNotes->firstItem(),
+            'to' => $paginatedNotes->lastItem(),
+            'has_more_pages' => $paginatedNotes->hasMorePages(),
+            'path' => $paginatedNotes->path(),
+            'links' => [
+                'first' => $paginatedNotes->url(1),
+                'last' => $paginatedNotes->url($paginatedNotes->lastPage()),
+                'prev' => $paginatedNotes->previousPageUrl(),
+                'next' => $paginatedNotes->nextPageUrl(),
+            ]
+        ];
 
         return response()->json([
             'success' => true,
             'message' => 'Note terbaru',
-            'data' => $notes,
+            'data' => $formattedNotes,
+            'pagination' => $paginationMeta,
         ]);
     }
 
     public function mostLikeNotes(Request $request)
     {
+        // Validasi query parameters untuk pagination
+        $validated = $request->validate([
+            'size' => 'nullable|integer|min:1|max:100',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        // Set default values
+        $size = $validated['size'] ?? 15;
+        $page = $validated['page'] ?? 1;
+
         $user = $request->user();
-        $notes = Note::approved()
-            ->with(['noteTags.tag', 'savedByUsers', 'reviews', 'likes', 'transactions'])
+
+        // Query dengan eager loading dan pagination
+        $notesQuery = Note::approved()
+            ->with([
+                'noteTags.tag',
+                'savedByUsers',
+                'reviews',
+                'likes',
+                'transactions',
+            ])
             ->withCount(['transactions as jumlah_terjual' => function ($query) {
                 $query->where('status', 'success');
             }])
-            ->orderByDesc('jumlah_like')
-            ->get()
-            ->map(function ($note) use ($user) {
-                return [
-                    'note_id' => $note->note_id,
-                    'seller' => [
-                        'seller_id' => $note->seller_id,
-                        'name' => $note->seller->name,
-                        'username' => $note->seller->username,
-                        'foto_profil' => url($note->seller->foto_profil_url),
-                        'isTopCreator' => null,
-                    ],
-                    'judul' => $note->judul,
-                    'deskripsi' => $note->deskripsi,
-                    'harga' => $note->harga,
-                    'jumlah_like' => $note->likes()->count(),
-                    'jumlah_favorit' => $note->savedByUsers->count(),
-                    'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
-                    'jumlah_terjual' => $note->jumlah_terjual,
-                    'rating' => round($note->reviews->avg('rating') ?? 0, 2),
-                    'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
-                    'tags' => $note->noteTags->map(function ($noteTag) {
-                        return $noteTag->tag->nama_tag ?? null;
-                    })->filter()->values(),
-                    'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
-                    'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
-                    'isBuy' => $user ? Transaction::where('note_id', $note->note_id)
-                        ->where('buyer_id', $user->user_id)
-                        ->where('status', 'paid')
-                        ->exists() : false,
-                    'created_at' => $note->created_at->toIso8601String(),
-                ];
-            });
+            ->orderByDesc('jumlah_like');
+
+        $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
+
+        $formattedNotes = $paginatedNotes->getCollection()->map(function ($note) use ($user) {
+            return [
+                'note_id' => $note->note_id,
+                'seller' => [
+                    'seller_id' => $note->seller_id,
+                    'name' => $note->seller->name,
+                    'username' => $note->seller->username,
+                    'foto_profil' => url($note->seller->foto_profil_url),
+                    'isTopCreator' => null,
+                ],
+                'judul' => $note->judul,
+                'deskripsi' => $note->deskripsi,
+                'harga' => $note->harga,
+                'jumlah_like' => $note->likes()->count(),
+                'jumlah_favorit' => $note->savedByUsers->count(),
+                'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
+                'jumlah_terjual' => $note->jumlah_terjual,
+                'rating' => round($note->reviews->avg('rating') ?? 0, 2),
+                'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
+                'tags' => $note->noteTags->map(function ($noteTag) {
+                    return $noteTag->tag->nama_tag ?? null;
+                })->filter()->values(),
+                'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
+                'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
+                'isBuy' => $user ? Transaction::where('note_id', $note->note_id)
+                    ->where('buyer_id', $user->user_id)
+                    ->where('status', 'paid')
+                    ->exists() : false,
+                'created_at' => $note->created_at->toIso8601String(),
+            ];
+        });
+
+        // Metadata pagination (opsional, bisa dihapus jika tidak perlu)
+        $paginationMeta = [
+            'current_page' => $paginatedNotes->currentPage(),
+            'per_page' => $paginatedNotes->perPage(),
+            'total' => $paginatedNotes->total(),
+            'last_page' => $paginatedNotes->lastPage(),
+            'from' => $paginatedNotes->firstItem(),
+            'to' => $paginatedNotes->lastItem(),
+            'has_more_pages' => $paginatedNotes->hasMorePages(),
+            'path' => $paginatedNotes->path(),
+            'links' => [
+                'first' => $paginatedNotes->url(1),
+                'last' => $paginatedNotes->url($paginatedNotes->lastPage()),
+                'prev' => $paginatedNotes->previousPageUrl(),
+                'next' => $paginatedNotes->nextPageUrl(),
+            ]
+        ];
 
         return response()->json([
             'success' => true,
             'message' => 'Note paling banyak disukai',
-            'data' => $notes,
+            'data' => $formattedNotes,
+            'pagination' => $paginationMeta,
         ]);
     }
 

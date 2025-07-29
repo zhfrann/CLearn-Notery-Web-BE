@@ -92,7 +92,12 @@ class ProfileController extends Controller
             'rating' => 'nullable|numeric|min:1|max:5',
             'tag_names' => 'nullable|array',
             'tag_names.*' => 'string|max:255',
+            'size' => 'nullable|integer|min:1|max:100',
+            'page' => 'nullable|integer|min:1',
         ]);
+
+        $size = $validated['size'] ?? 15;
+        $page = $validated['page'] ?? 1;
 
         // Helper untuk format data note
         $formatNote = function ($note) use ($user) {
@@ -171,7 +176,8 @@ class ProfileController extends Controller
             });
         }
 
-        $notesDijual = $notesDijualQuery->orderBy('created_at', 'desc')->get()->map($formatNote);
+        $paginatedNotesDijual = $notesDijualQuery->orderBy('created_at', 'desc')->paginate($size, ['*'], 'page', $page);
+        $notesDijual = $paginatedNotesDijual->getCollection()->map($formatNote);
 
         // 2. Notes dibeli oleh user (dengan filtering)
         $notesDibeliQuery = Transaction::where('buyer_id', $user->user_id)
@@ -225,7 +231,8 @@ class ProfileController extends Controller
             });
         }
 
-        $notesDibeli = $notesDibeliQuery->orderBy('created_at', 'desc')->get()->map(fn($tx) => $formatNote($tx->note));
+        $paginatedNotesDibeli = $notesDibeliQuery->orderBy('created_at', 'desc')->paginate($size, ['*'], 'page', $page);
+        $notesDibeli = $paginatedNotesDibeli->getCollection()->map(fn($tx) => $formatNote($tx->note));
 
         // Notes dibeli oleh user (hanya transaksi yang success dan note diterima) dengan filtering
         $favoriteNotes = $user->savedNotes()
@@ -234,6 +241,40 @@ class ProfileController extends Controller
             ->get()
             ->map(fn($saved) => $formatNote($saved->note));
 
+        // Metadata pagination (opsional, bisa dihapus jika tidak perlu)
+        $paginationMetaDijual = [
+            'current_page' => $paginatedNotesDijual->currentPage(),
+            'per_page' => $paginatedNotesDijual->perPage(),
+            'total' => $paginatedNotesDijual->total(),
+            'last_page' => $paginatedNotesDijual->lastPage(),
+            'from' => $paginatedNotesDijual->firstItem(),
+            'to' => $paginatedNotesDijual->lastItem(),
+            'has_more_pages' => $paginatedNotesDijual->hasMorePages(),
+            'path' => $paginatedNotesDijual->path(),
+            'links' => [
+                'first' => $paginatedNotesDijual->url(1),
+                'last' => $paginatedNotesDijual->url($paginatedNotesDijual->lastPage()),
+                'prev' => $paginatedNotesDijual->previousPageUrl(),
+                'next' => $paginatedNotesDijual->nextPageUrl(),
+            ]
+        ];
+        $paginationMetaDibeli = [
+            'current_page' => $paginatedNotesDibeli->currentPage(),
+            'per_page' => $paginatedNotesDibeli->perPage(),
+            'total' => $paginatedNotesDibeli->total(),
+            'last_page' => $paginatedNotesDibeli->lastPage(),
+            'from' => $paginatedNotesDibeli->firstItem(),
+            'to' => $paginatedNotesDibeli->lastItem(),
+            'has_more_pages' => $paginatedNotesDibeli->hasMorePages(),
+            'path' => $paginatedNotesDibeli->path(),
+            'links' => [
+                'first' => $paginatedNotesDibeli->url(1),
+                'last' => $paginatedNotesDibeli->url($paginatedNotesDibeli->lastPage()),
+                'prev' => $paginatedNotesDibeli->previousPageUrl(),
+                'next' => $paginatedNotesDibeli->nextPageUrl(),
+            ]
+        ];
+
         return response()->json([
             'success' => true,
             'message' => 'Catatan profil pengguna',
@@ -241,6 +282,10 @@ class ProfileController extends Controller
                 'notes_dijual' => $notesDijual,
                 'notes_dibeli' => $notesDibeli,
                 'favorite' => $favoriteNotes,
+            ],
+            'pagination' => [
+                'notes_dijual' => $paginationMetaDijual,
+                'notes_dibeli' => $paginationMetaDibeli,
             ],
         ]);
     }
