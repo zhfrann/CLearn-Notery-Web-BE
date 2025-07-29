@@ -56,4 +56,38 @@ class TagController extends Controller
             ], 500);
         }
     }
+
+    public function getMostSearchTags(Request $request)
+    {
+        // Validasi parameter opsional
+        $validated = $request->validate([
+            'limit' => 'nullable|integer|min:1|max:50', // Default 10, max 50
+        ]);
+
+        $limit = $validated['limit'] ?? 10;
+
+        // Query untuk mendapatkan tag paling banyak digunakan
+        $popularTags = Tag::withCount(['noteTags' => function ($query) {
+            // Hanya hitung notes yang sudah diterima/approved
+            $query->whereHas('note.noteStatus', function ($q) {
+                $q->where('status', 'diterima');
+            });
+        }])
+            ->having('note_tags_count', '>', 0) // Hanya tag yang punya minimal 1 note
+            ->orderByDesc('note_tags_count')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengambil data tag paling populer',
+            'data' => $popularTags->map(function ($tag) {
+                return [
+                    'tag_id' => $tag->tag_id,
+                    'nama_tag' => $tag->nama_tag,
+                    // 'jumlah_notes' => $tag->note_tags_count,
+                ];
+            })
+        ]);
+    }
 }
