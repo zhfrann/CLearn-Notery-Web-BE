@@ -97,7 +97,7 @@ class ProfileDataController extends Controller
                     'harga' => $transaction->note->harga,
                     'status' => $transaction->status,
                     'role' => 'buyer', // User sebagai pembeli
-                    'gambar_preview' => asset('storage/' . $transaction->note->gambar_preview),
+                    'gambar_preview' => url(asset('storage/' . $transaction->note->gambar_preview)),
                     // 'other_party' => [
                     //     'user_id' => $transaction->note->seller->user_id,
                     //     'nama' => $transaction->note->seller->nama,
@@ -122,7 +122,7 @@ class ProfileDataController extends Controller
                     'harga' => $transaction->note->harga,
                     'status' => $transaction->status,
                     'role' => 'seller', // User sebagai penjual
-                    'gambar_preview' => asset('storage/' . $transaction->note->gambar_preview),
+                    'gambar_preview' => url(asset('storage/' . $transaction->note->gambar_preview)),
                     // 'other_party' => [
                     //     'user_id' => $transaction->buyer->user_id,
                     //     'nama' => $transaction->buyer->nama,
