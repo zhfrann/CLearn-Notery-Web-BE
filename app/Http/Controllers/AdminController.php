@@ -81,14 +81,22 @@ class AdminController extends Controller
         $page = $validated['page'] ?? 1;
 
         // Query notes yang statusnya 'menunggu'
-        $notesQuery = Note::query()->whereHas('noteStatus', function ($q) {
-            $q->where('status', 'menunggu');
-        })
+        $notesQuery = Note::query()
+            ->join('note_statuses', 'notes.note_id', '=', 'note_statuses.note_id')
+            ->whereHas('noteStatus', function ($q) {
+                $q->whereIn('status', ['menunggu', 'diproses', 'diterima', 'ditolak']);
+            })
             ->with([
                 'seller:user_id,nama,username,foto_profil',
                 'noteStatus',
             ])
-            ->orderBy('created_at', 'asc');
+            ->orderByRaw("CASE
+                WHEN note_statuses.status = 'menunggu' THEN 0
+                WHEN note_statuses.status = 'diproses' THEN 1
+                WHEN note_statuses.status = 'diterima' THEN 2
+                WHEN note_statuses.status = 'ditolak' THEN 3
+                ELSE 4 END")
+            ->orderBy('notes.created_at', 'asc');
 
         $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
 
