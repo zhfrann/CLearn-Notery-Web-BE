@@ -30,9 +30,10 @@ class DatabaseSeeder extends Seeder
             FITMajorSeeder::class,
             FITSemesterSeeder::class,
             DIFCourseSeeder::class,
-            ReportTypeSeeder::class, // Add this
+            ReportTypeSeeder::class,
             NoteSeeder::class,
             InteractionSeeder::class,
+            ReportSeeder::class,
         ]);
     }
 }
