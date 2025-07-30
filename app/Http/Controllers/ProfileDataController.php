@@ -97,11 +97,12 @@ class ProfileDataController extends Controller
                     'harga' => $transaction->note->harga,
                     'status' => $transaction->status,
                     'role' => 'buyer', // User sebagai pembeli
-                    'other_party' => [
-                        'user_id' => $transaction->note->seller->user_id,
-                        'nama' => $transaction->note->seller->nama,
-                        'username' => $transaction->note->seller->username,
-                    ],
+                    'gambar_preview' => url(asset('storage/' . $transaction->note->gambar_preview)),
+                    // 'other_party' => [
+                    //     'user_id' => $transaction->note->seller->user_id,
+                    //     'nama' => $transaction->note->seller->nama,
+                    //     'username' => $transaction->note->seller->username,
+                    // ],
                     'created_at' => $transaction->created_at->toIso8601String(),
                 ];
             });
@@ -121,11 +122,12 @@ class ProfileDataController extends Controller
                     'harga' => $transaction->note->harga,
                     'status' => $transaction->status,
                     'role' => 'seller', // User sebagai penjual
-                    'other_party' => [
-                        'user_id' => $transaction->buyer->user_id,
-                        'nama' => $transaction->buyer->nama,
-                        'username' => $transaction->buyer->username,
-                    ],
+                    'gambar_preview' => url(asset('storage/' . $transaction->note->gambar_preview)),
+                    // 'other_party' => [
+                    //     'user_id' => $transaction->buyer->user_id,
+                    //     'nama' => $transaction->buyer->nama,
+                    //     'username' => $transaction->buyer->username,
+                    // ],
                     'created_at' => $transaction->created_at->toIso8601String(),
                 ];
             });
