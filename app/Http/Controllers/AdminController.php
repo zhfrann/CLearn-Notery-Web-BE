@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Note;
 use App\Models\Report;
 use App\Models\User;
 use App\Models\UserAction;
@@ -68,5 +69,67 @@ class AdminController extends Controller
         ]);
     }
 
-    public function getAllNotesSubmission(Request $request) {}
+    public function getAllNotesSubmission(Request $request)
+    {
+        // Validasi query parameters untuk pagination
+        $validated = $request->validate([
+            'size' => 'nullable|integer|min:1|max:100',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        $size = $validated['size'] ?? 20;
+        $page = $validated['page'] ?? 1;
+
+        // Query notes yang statusnya 'menunggu'
+        $notesQuery = Note::query()->whereHas('noteStatus', function ($q) {
+            $q->where('status', 'menunggu');
+        })
+            ->with([
+                'seller:user_id,nama,username,foto_profil',
+                'noteStatus',
+            ])
+            ->orderBy('created_at', 'asc');
+
+        $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
+
+        $result = $paginatedNotes->getCollection()->map(function ($note) {
+            return [
+                'note_id' => $note->note_id,
+                'title' => $note->judul,
+                'seller' => [
+                    'user_id' => $note->seller->user_id,
+                    'nama' => $note->seller->nama,
+                    'username' => $note->seller->username,
+                    'foto_profil' => $note->seller->foto_profil ? url('storage/' . $note->seller->foto_profil) : null,
+                ],
+                'status' => $note->noteStatus ? $note->noteStatus->status : null,
+                'created_at' => $note->created_at->toIso8601String(),
+            ];
+        });
+
+        // Metadata pagination
+        $paginationMeta = [
+            'current_page' => $paginatedNotes->currentPage(),
+            'per_page' => $paginatedNotes->perPage(),
+            'total' => $paginatedNotes->total(),
+            'last_page' => $paginatedNotes->lastPage(),
+            'from' => $paginatedNotes->firstItem(),
+            'to' => $paginatedNotes->lastItem(),
+            'has_more_pages' => $paginatedNotes->hasMorePages(),
+            'path' => $paginatedNotes->path(),
+            'links' => [
+                'first' => $paginatedNotes->url(1),
+                'last' => $paginatedNotes->url($paginatedNotes->lastPage()),
+                'prev' => $paginatedNotes->previousPageUrl(),
+                'next' => $paginatedNotes->nextPageUrl(),
+            ]
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar notes yang diajukan untuk dijual',
+            'data' => $result,
+            'pagination' => $paginationMeta,
+        ]);
+    }
 }
