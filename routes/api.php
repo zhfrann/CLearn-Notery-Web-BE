@@ -27,13 +27,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return response()->json([
-        'success' => true,
-        'message' => 'Data informasi user.',
-        'data' => new UserResource($request->user()->load(['semester', 'major', 'faculty']))
-    ]);
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return response()->json([
+//         'success' => true,
+//         'message' => 'Data informasi user.',
+//         'data' => new UserResource($request->user()->load(['semester', 'major', 'faculty']))
+//     ]);
+// });
 
 Route::prefix('/auth')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -44,7 +44,7 @@ Route::prefix('/auth')->group(function () {
     Route::delete('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'checkUserActive'])->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'getProfileDetail']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
@@ -124,4 +124,7 @@ Route::prefix('/admin')->middleware(['auth:sanctum', 'isAdmin'])->group(function
     Route::get('/notes-submission/{id}/queue', [AdminController::class, 'getDetailQueuSubmissions']);
     Route::post('/notes-submission/{id}/queue', [AdminController::class, 'addSubmissionsToQueue']);
     Route::post('/notes-submission/{id}/handle', [AdminController::class, 'handleQueueSubmission']);
+
+    Route::get('/users', [AdminController::class, 'getAllUsers']);
+    Route::patch('/users/{id}/ban', [AdminController::class, 'banUser']);
 });
