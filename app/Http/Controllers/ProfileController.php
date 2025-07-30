@@ -130,50 +130,61 @@ class ProfileController extends Controller
             ];
         };
 
-        // 1. Notes dijual (yang BISA DIBELI oleh user) - dengan filtering
-        $notesDijualQuery = Note::whereHas('noteStatus', fn($q) => $q->where('status', 'diterima'))
-            ->with(['seller', 'noteTags.tag', 'reviews', 'likes', 'savedByUsers', 'transactions', 'course.semester.major.faculty']);
+        // === BAGIAN notesDijual ===
+        $isFilter =
+            !empty($validated['nama']) ||
+            !empty($validated['course_id']) ||
+            !empty($validated['faculty_id']) ||
+            !empty($validated['major_id']) ||
+            !empty($validated['semester_id']) ||
+            !empty($validated['rating']) ||
+            (!empty($validated['tag_names']) && is_array($validated['tag_names']));
 
-        // Apply filtering pada notes yang bisa dibeli
-        if (!empty($validated['nama'])) {
-            $notesDijualQuery->where('judul', 'LIKE', '%' . $validated['nama'] . '%');
-        }
+        if (!$isFilter) {
+            // TANPA FILTER: notes milik user sendiri
+            $notesDijualQuery = Note::where('seller_id', $user->user_id)
+                ->with(['seller', 'noteTags.tag', 'reviews', 'likes', 'savedByUsers', 'transactions', 'course.semester.major.faculty']);
+        } else {
+            // DENGAN FILTER: notes yang bisa dibeli (bukan milik user, status diterima)
+            $notesDijualQuery = Note::whereHas('noteStatus', fn($q) => $q->where('status', 'diterima'))
+                ->where('seller_id', '!=', $user->user_id)
+                ->with(['seller', 'noteTags.tag', 'reviews', 'likes', 'savedByUsers', 'transactions', 'course.semester.major.faculty']);
 
-        if (!empty($validated['course_id'])) {
-            $notesDijualQuery->where('course_id', $validated['course_id']);
-        }
-
-        if (!empty($validated['faculty_id'])) {
-            $notesDijualQuery->whereHas('course.semester.major.faculty', function ($q) use ($validated) {
-                $q->where('faculty_id', $validated['faculty_id']);
-            });
-        }
-
-        if (!empty($validated['major_id'])) {
-            $notesDijualQuery->whereHas('course.semester.major', function ($q) use ($validated) {
-                $q->where('major_id', $validated['major_id']);
-            });
-        }
-
-        if (!empty($validated['semester_id'])) {
-            $notesDijualQuery->whereHas('course.semester', function ($q) use ($validated) {
-                $q->where('semester_id', $validated['semester_id']);
-            });
-        }
-
-        if (!empty($validated['rating'])) {
-            $notesDijualQuery->whereIn('note_id', function ($query) use ($validated) {
-                $query->select('note_id')
-                    ->from('reviews')
-                    ->groupBy('note_id')
-                    ->havingRaw('AVG(rating) >= ?', [$validated['rating']]);
-            });
-        }
-
-        if (!empty($validated['tag_names']) && is_array($validated['tag_names'])) {
-            $notesDijualQuery->whereHas('noteTags.tag', function ($q) use ($validated) {
-                $q->whereIn('nama_tag', $validated['tag_names']);
-            });
+            // Apply filtering
+            if (!empty($validated['nama'])) {
+                $notesDijualQuery->where('judul', 'LIKE', '%' . $validated['nama'] . '%');
+            }
+            if (!empty($validated['course_id'])) {
+                $notesDijualQuery->where('course_id', $validated['course_id']);
+            }
+            if (!empty($validated['faculty_id'])) {
+                $notesDijualQuery->whereHas('course.semester.major.faculty', function ($q) use ($validated) {
+                    $q->where('faculty_id', $validated['faculty_id']);
+                });
+            }
+            if (!empty($validated['major_id'])) {
+                $notesDijualQuery->whereHas('course.semester.major', function ($q) use ($validated) {
+                    $q->where('major_id', $validated['major_id']);
+                });
+            }
+            if (!empty($validated['semester_id'])) {
+                $notesDijualQuery->whereHas('course.semester', function ($q) use ($validated) {
+                    $q->where('semester_id', $validated['semester_id']);
+                });
+            }
+            if (!empty($validated['rating'])) {
+                $notesDijualQuery->whereIn('note_id', function ($query) use ($validated) {
+                    $query->select('note_id')
+                        ->from('reviews')
+                        ->groupBy('note_id')
+                        ->havingRaw('AVG(rating) >= ?', [$validated['rating']]);
+                });
+            }
+            if (!empty($validated['tag_names']) && is_array($validated['tag_names'])) {
+                $notesDijualQuery->whereHas('noteTags.tag', function ($q) use ($validated) {
+                    $q->whereIn('nama_tag', $validated['tag_names']);
+                });
+            }
         }
 
         $paginatedNotesDijual = $notesDijualQuery->orderBy('created_at', 'desc')->paginate($size, ['*'], 'page', $page);
