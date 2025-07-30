@@ -118,4 +118,10 @@ Route::prefix('/admin')->middleware(['auth:sanctum', 'isAdmin'])->group(function
     Route::get('/reports', [AdminController::class, 'getAllReports']);
 
     Route::get('/notes-submission', [AdminController::class, 'getAllNotesSubmission']);
+    Route::get('/notes-submission/handled', [AdminController::class, 'getAllHandledSubmission']);
+
+    Route::get('/notes-submission/queue', [AdminController::class, 'getAllQueuSubmissions']);
+    Route::get('/notes-submission/{id}/queue', [AdminController::class, 'getDetailQueuSubmissions']);
+    Route::post('/notes-submission/{id}/queue', [AdminController::class, 'addSubmissionsToQueue']);
+    Route::post('/notes-submission/{id}/handle', [AdminController::class, 'handleQueueSubmission']);
 });

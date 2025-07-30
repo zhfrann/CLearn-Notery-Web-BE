@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('note_statuses', function (Blueprint $table) {
             $table->id('note_status_id');
             $table->foreignId('note_id')->constrained('notes', 'note_id')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->enum('status', ['menunggu', 'diterima', 'ditolak'])->default('menunggu');
+            $table->enum('status', ['menunggu', 'diproses', 'diterima', 'ditolak'])->default('menunggu');
             $table->string('catatan')->nullable();
             $table->timestamps();
         });
