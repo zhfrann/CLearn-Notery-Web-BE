@@ -199,6 +199,52 @@ class ReviewController extends Controller
         ]);
     }
 
+    public function createSellerResponse(Request $request, $id)
+    {
+        $seller = auth()->user();
+
+        $request->validate([
+            'respon' => 'required|string',
+        ]);
+
+        $review = Review::query()->findOrFail($id);
+
+        // Pastikan hanya seller dari note terkait yang bisa merespon
+        $note = $review->note;
+        if ($note->seller_id !== $seller->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak berhak merespon review ini karena anda bukan seller note ini.',
+            ], 403);
+        }
+
+        // Cek jika sudah ada response
+        if ($review->response) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Review sudah direspon sebelumnya.',
+            ], 400);
+        }
+
+        $response = $review->response()->create([
+            'seller_id' => $seller->user_id,
+            'respon' => $request->respon,
+            'tgl_respon' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil membuat respon ulasan',
+            'data' => [
+                'review_response_id' => $response->review_response_id,
+                'review_id' => $response->review_id,
+                'seller_id' => $response->seller_id,
+                'reviewer_id' => $review->user_id,
+                'respons' => $response->respon,
+            ]
+        ]);
+    }
+
     // public function updateReview(Request $request, string $id) {}
 
     // public function deleteReview(Request $request, string $id) {}
