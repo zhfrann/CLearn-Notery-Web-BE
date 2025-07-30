@@ -69,6 +69,15 @@ class AuthController extends Controller
             ], 401));
         }
 
+        // Cek status akun
+        if ($user->status_akun !== 'aktif') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun Anda telah diban. Silakan hubungi admin.',
+            ], 403);
+        }
+
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

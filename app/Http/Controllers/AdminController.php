@@ -397,4 +397,101 @@ class AdminController extends Controller
             ],
         ]);
     }
+
+    public function getAllUsers(Request $request)
+    {
+        $validated = $request->validate([
+            'search' => 'nullable|string',
+            'size' => 'nullable|integer|min:1|max:100',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        $size = $validated['size'] ?? 20;
+        $page = $validated['page'] ?? 1;
+        $search = $validated['search'] ?? "";
+
+        $user = User::query()
+            ->where('role', 'student')
+            ->where(function ($q) use ($search) {
+                if ($search) {
+                    $q->where('nama', 'like', "%$search%")
+                        ->orWhere('username', 'like', "%$search%")
+                        ->orWhere('email', 'like', "%$search%");
+                }
+            })
+            ->with('notes.noteStatus')
+            ->orderBy('username', 'asc');
+
+        $paginated = $user->paginate($size, ['*'], 'page', $page);
+
+        $result = $paginated->getCollection()->map(function ($user) {
+            $jumlahNotes = $user->notes->filter(function ($note) {
+                return $note->noteStatus && $note->noteStatus->status === 'diterima';
+            })->count();
+
+            return [
+                'user_id' => $user->user_id,
+                'nama' => $user->nama,
+                'username' => $user->username,
+                'foto_profil' => $user->foto_profil ? url('storage/' . $user->foto_profil) : null,
+                'jumlah_notes' => $jumlahNotes,
+                'isBanned' => $user->status_akun === 'nonaktif',
+            ];
+        });
+
+        $paginationMeta = [
+            'current_page' => $paginated->currentPage(),
+            'per_page' => $paginated->perPage(),
+            'total' => $paginated->total(),
+            'last_page' => $paginated->lastPage(),
+            'from' => $paginated->firstItem(),
+            'to' => $paginated->lastItem(),
+            'has_more_pages' => $paginated->hasMorePages(),
+            'path' => $paginated->path(),
+            'links' => [
+                'first' => $paginated->url(1),
+                'last' => $paginated->url($paginated->lastPage()),
+                'prev' => $paginated->previousPageUrl(),
+                'next' => $paginated->nextPageUrl(),
+            ]
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Daftar users',
+            'data' => $result,
+            'pagination' => $paginationMeta,
+        ]);
+    }
+
+    public function banUser(Request $request, string $id)
+    {
+        $user = User::query()->where('user_id', $id)->first();
+
+        if (!$user) {
+            return response()->json([
+                "success" => false,
+                "message" => "User tidak ditemukan",
+            ], 404);
+        }
+
+        if ($user->status_akun != 'aktif') {
+            return response()->json([
+                "success" => false,
+                "message" => "User sudah di ban",
+            ], 400);
+        }
+
+        $user->status_akun = 'nonaktif';
+        $user->save();
+
+        return response()->json([
+            "success" => true,
+            "message" => "User berhasil di-ban",
+            "data" => [
+                "user_id" => $user->user_id,
+                "status_akun" => $user->status_akun,
+            ]
+        ]);
+    }
 }
