@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum', 'checkUserActive'])->group(function () {
     // Route::put('/notes/{id}/reviews', [ReviewController::class, 'updateReview']);
     // Route::delete('/notes/{id}/reviews', [ReviewController::class, 'deleteReview']);
 
+    Route::post('/reviews/{id}/response', [ReviewController::class, 'createSellerResponse']);
     Route::post('/reviews/{id}/vote', [ReviewController::class, 'voteReview']);
     Route::delete('/reviews/{id}/vote', [ReviewController::class, 'unvoteReview']);
 
