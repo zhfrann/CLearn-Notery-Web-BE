@@ -97,7 +97,7 @@ class AdminController extends Controller
                 'note_id' => $note->note_id,
                 'title' => $note->judul,
                 'seller' => [
-                    'user_id' => $note->seller->user_id,
+                    'seller_id' => $note->seller->user_id,
                     'nama' => $note->seller->nama,
                     'username' => $note->seller->username,
                     'foto_profil' => $note->seller->foto_profil ? url('storage/' . $note->seller->foto_profil) : null,
@@ -130,6 +130,263 @@ class AdminController extends Controller
             'message' => 'Daftar notes yang diajukan untuk dijual',
             'data' => $result,
             'pagination' => $paginationMeta,
+        ]);
+    }
+
+    public function getAllHandledSubmission(Request $request)
+    {
+        // Validasi query parameters untuk pagination
+        $validated = $request->validate([
+            'size' => 'nullable|integer|min:1|max:100',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        $size = $validated['size'] ?? 20;
+        $page = $validated['page'] ?? 1;
+
+        // Query notes yang statusnya 'menunggu'
+        $notesQuery = Note::query()->whereHas('noteStatus', function ($q) {
+            $q->whereIn('status', ['diterima', 'ditolak']);
+        })
+            ->with([
+                'seller:user_id,nama,username,foto_profil',
+                'noteStatus',
+            ])
+            ->orderBy('updated_at', 'desc');
+
+        $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
+
+        $result = $paginatedNotes->getCollection()->map(function ($note) {
+            return [
+                'note_id' => $note->note_id,
+                'title' => $note->judul,
+                'seller' => [
+                    'seller_id' => $note->seller->user_id,
+                    'nama' => $note->seller->nama,
+                    'username' => $note->seller->username,
+                    'foto_profil' => $note->seller->foto_profil ? url('storage/' . $note->seller->foto_profil) : null,
+                ],
+                'status' => $note->noteStatus ? $note->noteStatus->status : null,
+                'created_at' => $note->created_at->toIso8601String(),
+            ];
+        });
+
+        // Metadata pagination
+        $paginationMeta = [
+            'current_page' => $paginatedNotes->currentPage(),
+            'per_page' => $paginatedNotes->perPage(),
+            'total' => $paginatedNotes->total(),
+            'last_page' => $paginatedNotes->lastPage(),
+            'from' => $paginatedNotes->firstItem(),
+            'to' => $paginatedNotes->lastItem(),
+            'has_more_pages' => $paginatedNotes->hasMorePages(),
+            'path' => $paginatedNotes->path(),
+            'links' => [
+                'first' => $paginatedNotes->url(1),
+                'last' => $paginatedNotes->url($paginatedNotes->lastPage()),
+                'prev' => $paginatedNotes->previousPageUrl(),
+                'next' => $paginatedNotes->nextPageUrl(),
+            ]
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar notes yang diajukan untuk dijual',
+            'data' => $result,
+            'pagination' => $paginationMeta,
+        ]);
+    }
+
+    public function addSubmissionsToQueue(Request $request, string $id)
+    {
+        // Validasi ID note
+        $note = Note::with('noteStatus')->find($id);
+
+        if (!$note) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan.',
+            ], 404);
+        }
+
+        // Pastikan status saat ini adalah 'menunggu'
+        if (!$note->noteStatus || $note->noteStatus->status !== 'menunggu') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak dalam status menunggu.',
+            ], 400);
+        }
+
+        // Update status menjadi 'diproses'
+        $note->noteStatus->status = 'diproses';
+        $note->noteStatus->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note berhasil dimasukkan ke antrian proses.',
+            'data' => [
+                'note_id' => $note->note_id,
+                'status' => $note->noteStatus->status,
+            ],
+        ]);
+    }
+
+    public function getAllQueuSubmissions(Request $request)
+    {
+        // Validasi query parameters untuk pagination
+        $validated = $request->validate([
+            'size' => 'nullable|integer|min:1|max:100',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        $size = $validated['size'] ?? 20;
+        $page = $validated['page'] ?? 1;
+
+        // Query notes yang statusnya 'menunggu'
+        $notesQuery = Note::query()->whereHas('noteStatus', function ($q) {
+            $q->where('status', 'diproses');
+        })
+            ->with([
+                'seller:user_id,nama,username,foto_profil',
+                'noteTags.tag:tag_id,nama_tag',
+                'noteStatus',
+                'likes',
+                'reviews',
+            ])
+            ->orderBy('created_at', 'asc');
+
+        $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
+
+        $result = $paginatedNotes->getCollection()->map(function ($note) {
+            return [
+                'note_id' => $note->note_id,
+                'no_antrian' => $note->noteStatus->note_status_id,
+                'title' => $note->judul,
+                'deskripsi' => $note->deskripsi,
+                'seller' => [
+                    'seller_id' => $note->seller->user_id,
+                    'nama' => $note->seller->nama,
+                    'username' => $note->seller->username,
+                    'foto_profil' => $note->seller->foto_profil ? url('storage/' . $note->seller->foto_profil) : null,
+                ],
+                'tags' => $note->noteTags->map(function ($noteTag) {
+                    return $noteTag->tag->nama_tag ?? null;
+                })->filter()->values(),
+                // 'rating' => round($note->reviews->avg('rating') ?? 0, 2),
+                'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
+                'status' => $note->noteStatus ? $note->noteStatus->status : null,
+                'created_at' => $note->created_at->toIso8601String(),
+            ];
+        });
+
+        // Metadata pagination
+        $paginationMeta = [
+            'current_page' => $paginatedNotes->currentPage(),
+            'per_page' => $paginatedNotes->perPage(),
+            'total' => $paginatedNotes->total(),
+            'last_page' => $paginatedNotes->lastPage(),
+            'from' => $paginatedNotes->firstItem(),
+            'to' => $paginatedNotes->lastItem(),
+            'has_more_pages' => $paginatedNotes->hasMorePages(),
+            'path' => $paginatedNotes->path(),
+            'links' => [
+                'first' => $paginatedNotes->url(1),
+                'last' => $paginatedNotes->url($paginatedNotes->lastPage()),
+                'prev' => $paginatedNotes->previousPageUrl(),
+                'next' => $paginatedNotes->nextPageUrl(),
+            ]
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar notes yang diajukan untuk dijual',
+            'data' => $result,
+            'pagination' => $paginationMeta,
+        ]);
+    }
+
+    public function getDetailQueuSubmissions(Request $request, string $id)
+    {
+        $note = Note::with([
+            'seller:user_id,nama,username,foto_profil',
+            'noteStatus',
+            'noteTags.tag:tag_id,nama_tag',
+            'files',
+        ])->find($id);
+
+        if (!$note || !$note->noteStatus || $note->noteStatus->status !== 'diproses') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan atau tidak dalam antrian proses.',
+            ], 404);
+        }
+
+        $data = [
+            'note_id' => $note->note_id,
+            'no_antrian' => $note->noteStatus->note_status_id,
+            'seller' => [
+                'seller_id' => $note->seller->user_id ?? null,
+                'nama' => $note->seller->nama ?? null,
+                'username' => $note->seller->username ?? null,
+                'foto_profil' => $note->seller->foto_profil ? url('storage/' . $note->seller->foto_profil) : null,
+            ],
+            'judul' => $note->judul,
+            'deskripsi' => $note->deskripsi,
+            'gambar_preview' => $note->gambar_preview ? url('storage/' . $note->gambar_preview) : null,
+            'tags' => $note->noteTags->map(function ($noteTag) {
+                return $noteTag->tag ? [
+                    'tag_id' => $noteTag->tag->tag_id,
+                    'nama_tag' => $noteTag->tag->nama_tag,
+                ] : null;
+            })->filter()->values(),
+            'files' => $note->files->map(function ($file) {
+                return [
+                    'note_file_id' => $file->note_file_id,
+                    'nama_file' => $file->nama_file,
+                    'path_file' => url('storage/' . $file->path_file),
+                    'tipe' => $file->tipe,
+                ];
+            })->values(),
+            'created_at' => $note->created_at->toIso8601String(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail note dalam antrian proses.',
+            'data' => $data,
+        ]);
+    }
+
+    public function handleQueueSubmission(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+        ]);
+
+        $note = Note::with('noteStatus')->find($id);
+
+        if (!$note || !$note->noteStatus || $note->noteStatus->status !== 'diproses') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note tidak ditemukan atau tidak dalam antrian proses.',
+            ], 404);
+        }
+
+        // Ubah status sesuai action
+        if ($validated['action'] === 'approve') {
+            $note->noteStatus->status = 'diterima';
+        } else {
+            $note->noteStatus->status = 'ditolak';
+        }
+        $note->noteStatus->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status note berhasil diperbarui.',
+            'data' => [
+                'note_id' => $note->note_id,
+                'status' => $note->noteStatus->status,
+            ],
         ]);
     }
 }
