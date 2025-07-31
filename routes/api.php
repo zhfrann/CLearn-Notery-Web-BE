@@ -3,6 +3,7 @@
 use App\Http\Controllers\AcademicStructureController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileDataController;
@@ -105,6 +106,10 @@ Route::middleware(['auth:sanctum', 'checkUserActive'])->group(function () {
 
     Route::post('/reports', [ReportController::class, 'submitReport']);
     Route::get('/reports/types', [ReportController::class, 'getReportTypes']);
+
+    Route::post('/notes/{noteId}/chat', [ChatController::class, 'getOrCreateChatRoom']);
+    Route::post('/chat-rooms/{chatRoomId}/messages', [ChatController::class, 'sendMessage']);
+    Route::get('/chat-rooms/{chatRoomId}/messages', [ChatController::class, 'getMessages']);
 
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);

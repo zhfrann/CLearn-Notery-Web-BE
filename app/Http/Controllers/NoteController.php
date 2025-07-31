@@ -28,6 +28,8 @@ class NoteController extends Controller
             'page' => 'nullable|integer|min:1',
         ]);
 
+        $topCreatorIds = $this->getTopCreatorsId();
+
         // Set default values
         $size = $validated['size'] ?? 15;
         $page = $validated['page'] ?? 1;
@@ -48,7 +50,7 @@ class NoteController extends Controller
 
         $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
 
-        $result = $paginatedNotes->getCollection()->map(function ($note) use ($user) {
+        $result = $paginatedNotes->getCollection()->map(function ($note) use ($user, $topCreatorIds) {
             $course = $note->course;
             $major = $course->major ?? null;
             $faculty = $major ? $major->faculty : null;
@@ -61,7 +63,7 @@ class NoteController extends Controller
                     'name' => $note->seller->name,
                     'username' => $note->seller->username,
                     'foto_profil' => url($note->seller->foto_profil_url),
-                    'isTopCreator' => null,
+                    'isTopCreator' => in_array($note->seller_id, $topCreatorIds),
                 ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
@@ -143,6 +145,8 @@ class NoteController extends Controller
             'page' => 'nullable|integer|min:1',
         ]);
 
+        $topCreatorIds = $this->getTopCreatorsId();
+
         // Set default values
         $size = $validated['size'] ?? 15;
         $page = $validated['page'] ?? 1;
@@ -166,7 +170,7 @@ class NoteController extends Controller
 
         $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
 
-        $formattedNotes = $paginatedNotes->getCollection()->map(function ($note) use ($user) {
+        $formattedNotes = $paginatedNotes->getCollection()->map(function ($note) use ($user, $topCreatorIds) {
             return [
                 'note_id' => $note->note_id,
                 'seller' => [
@@ -174,7 +178,7 @@ class NoteController extends Controller
                     'nama' => $note->seller->nama,
                     'username' => $note->seller->username,
                     'foto_profil' => url($note->seller->foto_profil_url),
-                    'isTopCreator' => null,
+                    'isTopCreator' => in_array($note->seller_id, $topCreatorIds),
                 ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
@@ -232,6 +236,8 @@ class NoteController extends Controller
             'page' => 'nullable|integer|min:1',
         ]);
 
+        $topCreatorIds = $this->getTopCreatorsId();
+
         // Set default values
         $size = $validated['size'] ?? 15;
         $page = $validated['page'] ?? 1;
@@ -254,7 +260,7 @@ class NoteController extends Controller
 
         $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
 
-        $formattedNotes = $paginatedNotes->getCollection()->map(function ($note) use ($user) {
+        $formattedNotes = $paginatedNotes->getCollection()->map(function ($note) use ($user, $topCreatorIds) {
             return [
                 'note_id' => $note->note_id,
                 'seller' => [
@@ -262,7 +268,7 @@ class NoteController extends Controller
                     'name' => $note->seller->name,
                     'username' => $note->seller->username,
                     'foto_profil' => url($note->seller->foto_profil_url),
-                    'isTopCreator' => null,
+                    'isTopCreator' => in_array($note->seller_id, $topCreatorIds),
                 ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
@@ -469,6 +475,8 @@ class NoteController extends Controller
         // 5. Ambil nama tags
         $tags = Tag::whereIn('tag_id', $validated['tag_id'])->pluck('nama_tag')->toArray();
 
+        $topCreatorIds = $this->getTopCreatorsId();
+
         // 6. Response
         return response()->json([
             'success' => true,
@@ -480,7 +488,7 @@ class NoteController extends Controller
                     'name' => $note->seller->name,
                     'username' => $note->seller->username,
                     'foto_profil' => url($note->seller->foto_profil_url),
-                    'isTopCreator' => null,
+                    'isTopCreator' => in_array($note->seller_id, $topCreatorIds),
                 ],
                 'judul' => $note->judul,
                 'deskripsi' => $note->deskripsi,
@@ -530,6 +538,8 @@ class NoteController extends Controller
             // Tambahkan kunjungan
             $note->increment('jumlah_dikunjungi', 1);
 
+            $topCreatorIds = $this->getTopCreatorsId();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Detail note',
@@ -540,7 +550,7 @@ class NoteController extends Controller
                         'name' => $note->seller->nama,
                         'username' => $note->seller->username,
                         'foto_profil' => url($note->seller->foto_profil_url),
-                        'isTopCreator' => null, //TODO Implement isTopCreator logic
+                        'isTopCreator' => in_array($note->seller_id, $topCreatorIds),
                     ],
                     'judul' => $note->judul,
                     'deskripsi' => $note->deskripsi,
@@ -1272,5 +1282,23 @@ class NoteController extends Controller
             'success' => true,
             'message' => 'Payment status updated successfully'
         ]);
+    }
+
+    private function getTopCreatorsId()
+    {
+        return User::whereHas('notes', function ($q) {
+            $q->whereHas('noteStatus', function ($status) {
+                $status->where('status', 'diterima');
+            });
+        })
+            ->withSum(['notes as total_like' => function ($q) {
+                $q->whereHas('noteStatus', function ($status) {
+                    $status->where('status', 'diterima');
+                });
+            }], 'jumlah_like')
+            ->orderByDesc('total_like')
+            ->limit(10)
+            ->pluck('user_id')
+            ->toArray();
     }
 }
