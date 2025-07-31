@@ -91,7 +91,14 @@ class ChatController extends Controller
     public function getMessages(Request $request, $chatRoomId)
     {
         $user = $request->user();
-        $chatRoom = ChatRoom::findOrFail($chatRoomId);
+        $chatRoom = ChatRoom::query()->findOrFail($chatRoomId);
+
+        if (!$chatRoom) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mendapatkan pesan'
+            ], 404);
+        }
 
         // Pastikan user adalah bagian dari chat room
         if ($chatRoom->user_one_id !== $user->user_id && $chatRoom->user_two_id !== $user->user_id) {
