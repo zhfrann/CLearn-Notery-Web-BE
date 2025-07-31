@@ -14,7 +14,15 @@ class ChatController extends Controller
     public function getOrCreateChatRoom(Request $request, $noteId)
     {
         $buyer = $request->user();
-        $note = Note::findOrFail($noteId);
+        $note = Note::query()->find($noteId);
+
+        if (!$note) {
+            return response()->json([
+                'success' => false,
+                'message' => "Note tidak ditemukan"
+            ], 404);
+        }
+
         $seller = $note->seller;
 
         // Cek jika buyer == seller, tidak boleh chat dengan diri sendiri
@@ -60,7 +68,14 @@ class ChatController extends Controller
         ]);
         $user = $request->user();
 
-        $chatRoom = \App\Models\ChatRoom::findOrFail($chatRoomId);
+        $chatRoom = ChatRoom::query()->find($chatRoomId);
+
+        if (!$chatRoom) {
+            return response()->json([
+                'success' => false,
+                'message' => "Room $chatRoomId tidak ditemukan"
+            ], 404);
+        }
 
         // Pastikan user adalah bagian dari chat room
         if ($chatRoom->user_one_id !== $user->user_id && $chatRoom->user_two_id !== $user->user_id) {
@@ -91,12 +106,12 @@ class ChatController extends Controller
     public function getMessages(Request $request, $chatRoomId)
     {
         $user = $request->user();
-        $chatRoom = ChatRoom::query()->findOrFail($chatRoomId);
+        $chatRoom = ChatRoom::query()->find($chatRoomId);
 
         if (!$chatRoom) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mendapatkan pesan'
+                'message' => "Room $chatRoomId tidak ditemukan"
             ], 404);
         }
 
