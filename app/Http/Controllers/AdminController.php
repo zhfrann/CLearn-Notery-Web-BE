@@ -410,6 +410,8 @@ class AdminController extends Controller
         $page = $validated['page'] ?? 1;
         $search = $validated['search'] ?? "";
 
+        $reportedUserIds = Report::distinct()->pluck('reported_user_id')->toArray();
+
         $user = User::query()
             ->where('role', 'student')
             ->where(function ($q) use ($search) {
@@ -420,7 +422,8 @@ class AdminController extends Controller
                 }
             })
             ->with('notes.noteStatus')
-            ->orderBy('username', 'asc');
+            ->orderByRaw('FIELD(user_id, ' . implode(',', $reportedUserIds) . ') DESC');
+        // ->orderBy('username', 'asc');
 
         $paginated = $user->paginate($size, ['*'], 'page', $page);
 

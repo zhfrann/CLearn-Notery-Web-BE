@@ -16,16 +16,22 @@ class ReportSeeder extends Seeder
     public function run(): void
     {
         // Ambil hanya user dengan role student
-        $reportedUsers = User::where('role', 'student')->inRandomOrder()->take(5)->get();
+        $allStudents = User::where('role', 'student')->get();
         $reportTypes = ReportType::active()->get();
-        $allReporters = User::where('role', 'student')->get();
+        $allReporters = $allStudents;
+
+        // Pilih random 30-60% user sebagai reported user
+        $totalReported = (int) ceil($allStudents->count() * rand(30, 60) / 100);
+        $reportedUsers = $allStudents->shuffle()->take($totalReported);
 
         foreach ($reportedUsers as $reportedUser) {
-            foreach ($reportTypes as $type) {
+            // Setiap reported user hanya akan mendapat 1-3 jenis report
+            $userReportTypes = $reportTypes->shuffle()->take(rand(1, 3));
+            foreach ($userReportTypes as $type) {
                 // Ambil reporter yang berbeda dari reportedUser
                 $reporterCandidates = $allReporters->where('user_id', '!=', $reportedUser->user_id)->shuffle();
-                // Misal, 3-7 reporter untuk setiap kombinasi
-                $jumlahReporter = rand(3, 7);
+                // 2-5 reporter untuk setiap kombinasi
+                $jumlahReporter = rand(2, 5);
                 $selectedReporters = $reporterCandidates->take($jumlahReporter);
 
                 foreach ($selectedReporters as $reporter) {
