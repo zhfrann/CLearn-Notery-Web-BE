@@ -113,7 +113,7 @@ Route::middleware(['auth:sanctum', 'checkUserActive'])->group(function () {
     Route::get('/chat-rooms/{chatRoomId}/messages', [ChatController::class, 'getMessages']);
 
     Route::get('/notifications/announcements', [NotificationController::class, 'getAllAnnouncement']);
-    Route::get('/notifications/users/{id}', [NotificationController::class, 'getUserNotification']);
+    Route::get('/notifications/users', [NotificationController::class, 'getUserNotification']);
 
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);

@@ -153,9 +153,15 @@ class NotificationController extends Controller
         }
     }
 
-    public function getUserNotification(Request $request, string $id)
+    public function getUserNotification(Request $request)
     {
+        $id = $request->user()->user_id;
+
         try {
+            Notification::where('user_id', (int)$id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
             // Ambil notifikasi untuk user (personal) dan announcement (global)
             $notifications = Notification::query()
                 ->where(function ($q) use ($id) {
