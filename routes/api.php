@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileDataController;
 use App\Http\Controllers\ReportController;
@@ -111,6 +112,9 @@ Route::middleware(['auth:sanctum', 'checkUserActive'])->group(function () {
     Route::post('/chat-rooms/{chatRoomId}/messages', [ChatController::class, 'sendMessage']);
     Route::get('/chat-rooms/{chatRoomId}/messages', [ChatController::class, 'getMessages']);
 
+    Route::get('/notifications/announcements', [NotificationController::class, 'getAllAnnouncement']);
+    Route::get('/notifications/users/{id}', [NotificationController::class, 'getUserNotification']);
+
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);
     //     // Route::get(/{id}/reviews, [...]);
@@ -133,4 +137,7 @@ Route::prefix('/admin')->middleware(['auth:sanctum', 'isAdmin'])->group(function
 
     Route::get('/users', [AdminController::class, 'getAllUsers']);
     Route::patch('/users/{id}/ban', [AdminController::class, 'banUser']);
+
+    Route::post('/notifications/announcements', [NotificationController::class, 'createAnnouncement']);
+    Route::post('/notifications/users/{id}/warnings', [NotificationController::class, 'createWarning']);
 });

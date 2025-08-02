@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             NoteSeeder::class,
             InteractionSeeder::class,
             ReportSeeder::class,
+            AnnouncementSeeder::class,
         ]);
     }
 }
