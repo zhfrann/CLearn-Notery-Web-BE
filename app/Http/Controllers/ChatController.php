@@ -79,7 +79,10 @@ class ChatController extends Controller
 
         // Pastikan user adalah bagian dari chat room
         if ($chatRoom->user_one_id !== $user->user_id && $chatRoom->user_two_id !== $user->user_id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak bisa mengakses chat room yang bukan punya anda'
+            ], 403);
         }
 
         $message = Message::create([
@@ -87,6 +90,14 @@ class ChatController extends Controller
             'sender_id' => $user->user_id,
             'pesan' => $request->pesan,
         ]);
+
+        // Cek apakah ini pesan pertama di chat room
+        if ($chatRoom->messages()->count() == 1) {
+            // Tentukan seller (selalu user_one_id atau user_two_id yang bukan pengirim)
+            $sellerId = ($chatRoom->user_one_id == $user->user_id) ? $chatRoom->user_two_id : $chatRoom->user_one_id;
+            // Panggil NotificationController untuk membuat notifikasi
+            app('App\Http\Controllers\NotificationController')->notifyFirstChat($sellerId, $user, $message);
+        }
 
         // Broadcast event ke channel chat
         broadcast(new MessageSent($message))->toOthers();
