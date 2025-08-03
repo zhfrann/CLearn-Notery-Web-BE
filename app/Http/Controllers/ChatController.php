@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\MessageSent;
 use App\Models\ChatRoom;
 use App\Models\Message;
+use App\Models\MessageFile;
 use App\Models\Note;
 use Illuminate\Http\Request;
 
@@ -65,6 +66,7 @@ class ChatController extends Controller
     {
         $request->validate([
             'pesan' => 'required|string',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,gif|max:5120', // max 5MB
         ]);
         $user = $request->user();
 
@@ -91,6 +93,27 @@ class ChatController extends Controller
             'pesan' => $request->pesan,
         ]);
 
+        $fileData = null;
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = uniqid() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('chat/files', $filename, 'public');
+
+            $messageFile = MessageFile::create([
+                'message_id' => $message->message_id,
+                'nama_file' => $file->getClientOriginalName(),
+                'path_file' => $path,
+                'tipe' => $file->getClientOriginalExtension(),
+            ]);
+
+            $fileData = [
+                'message_file_id' => $messageFile->message_file_id,
+                'nama_file' => $messageFile->nama_file,
+                'path_file' => url('storage/' . $messageFile->path_file),
+                'tipe' => $messageFile->tipe,
+            ];
+        }
+
         // Cek apakah ini pesan pertama di chat room
         if ($chatRoom->messages()->count() == 1) {
             // Tentukan seller (selalu user_one_id atau user_two_id yang bukan pengirim)
@@ -109,6 +132,7 @@ class ChatController extends Controller
                 'chat_room_id' => $message->chat_room_id,
                 'sender_id' => $message->sender_id,
                 'pesan' => $message->pesan,
+                'file' => $fileData,
                 'created_at' => $message->created_at,
             ]
         ]);
@@ -131,11 +155,29 @@ class ChatController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $messages = $chatRoom->messages()->orderBy('created_at')->get();
+        $messages = $chatRoom->messages()->with('files')->orderBy('created_at')->get();
+
+        $data = $messages->map(function ($msg) {
+            return [
+                'message_id' => $msg->message_id,
+                'chat_room_id' => $msg->chat_room_id,
+                'sender_id' => $msg->sender_id,
+                'pesan' => $msg->pesan,
+                'file' => $msg->files->map(function ($file) {
+                    return [
+                        'message_file_id' => $file->message_file_id,
+                        'nama_file' => $file->nama_file,
+                        'path_file' => url('storage/' . $file->path_file),
+                        'tipe' => $file->tipe,
+                    ];
+                })->first(), // Ambil satu file saja (karena satu pesan satu file gambar)
+                'created_at' => $msg->created_at->toIso8601String(),
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $messages
+            'data' => $data
         ]);
     }
 }
