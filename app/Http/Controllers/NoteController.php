@@ -73,6 +73,7 @@ class NoteController extends Controller
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                 'jumlah_terjual' => $note->transactions->where('status', 'success')->count(),
+                'jumlah_review' => $note->reviews->count() ?? 0,
                 'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                 'rating' => round($note->reviews->avg('rating') ?? 0, 2),
                 'fakultas' => $faculty ? [
@@ -187,6 +188,7 @@ class NoteController extends Controller
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                 'jumlah_terjual' => $note->jumlah_terjual,
+                'jumlah_review' => $note->reviews->count() ?? 0,
                 'rating' => round($note->reviews->avg('rating') ?? 0, 2),
                 'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                 'tags' => $note->noteTags->map(function ($noteTag) {
@@ -277,6 +279,7 @@ class NoteController extends Controller
                 'jumlah_favorit' => $note->savedByUsers->count(),
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                 'jumlah_terjual' => $note->jumlah_terjual,
+                'jumlah_review' => $note->reviews->count() ?? 0,
                 'rating' => round($note->reviews->avg('rating') ?? 0, 2),
                 'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                 'tags' => $note->noteTags->map(function ($noteTag) {
@@ -559,6 +562,7 @@ class NoteController extends Controller
                     'jumlah_favorit' => $note->saved_by_users_count,
                     'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                     'jumlah_terjual' => $note->transactions_count,
+                    'jumlah_review' => $note->reviews->count() ?? 0,
                     'rating' => round($note->reviews_avg_rating ?? 0, 2),
                     'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                     'tags' => $note->noteTags->pluck('tag.nama_tag'),
