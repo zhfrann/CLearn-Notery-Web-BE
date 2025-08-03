@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\NoteStatus;
 use App\Models\Transaction;
+use App\Models\WithdrawRequest;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ProfileDataController extends Controller
 {
@@ -209,5 +212,121 @@ class ProfileDataController extends Controller
         ]);
     }
 
-    // public function favoritesNotes(Request $request) {}
+    public function earning(Request $request)
+    {
+        $user = $request->user();
+
+        // Ambil semua transaksi sukses (paid) untuk note milik user (seller)
+        $transactions = Transaction::whereHas('note', function ($q) use ($user) {
+            $q->where('seller_id', $user->user_id);
+        })
+            ->where('status', 'paid')
+            ->orderBy('tgl_transaksi', 'asc')
+            ->get();
+
+        $totalIncome = $transactions->sum('seller_amount');
+        $totalSales = $transactions->count();
+
+        // Total withdraw yang sudah diterima/diproses
+        $withdrawn = WithdrawRequest::where('user_id', $user->user_id)
+            ->where('status', '=', 'diterima_admin')
+            ->sum('jumlah');
+
+        // Saldo yang bisa ditarik
+        $currentIncome = $totalIncome - $withdrawn;
+        $currentIncome = max($currentIncome, 0);
+
+        // Rata-rata bulanan
+        $first = $transactions->first();
+        $last = $transactions->last();
+        if ($first && $last) {
+            $firstMonth = Carbon::parse($first->tgl_transaksi)->startOfMonth();
+            $lastMonth = Carbon::parse($last->tgl_transaksi)->startOfMonth();
+            $months = $firstMonth->diffInMonths($lastMonth) + 1;
+        } else {
+            $months = 1;
+        }
+        $avgMonthlyIncome = $months > 0 ? round($totalIncome / $months) : 0;
+        $avgMonthlySales = $months > 0 ? round($totalSales / $months) : 0;
+
+        // Rata-rata harian
+        if ($first && $last) {
+            $firstDay = Carbon::parse($first->tgl_transaksi)->startOfDay();
+            $lastDay = Carbon::parse($last->tgl_transaksi)->startOfDay();
+            $days = $firstDay->diffInDays($lastDay) + 1;
+        } else {
+            $days = 1;
+        }
+        $avgDailyIncome = $days > 0 ? round($totalIncome / $days) : 0;
+        $avgDailySales = $days > 0 ? round($totalSales / $days) : 0;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Earning summary',
+            'data' => [
+                'total_income' => $totalIncome,
+                'total_sales' => $totalSales,
+                'current_income' => $currentIncome,
+                'withdrawn' => $withdrawn,
+                'avg_monthly_income' => $avgMonthlyIncome,
+                'avg_monthly_sales' => $avgMonthlySales,
+                'avg_daily_income' => $avgDailyIncome,
+                'avg_daily_sales' => $avgDailySales,
+            ]
+        ]);
+    }
+
+    public function withdraw(Request $request)
+    {
+        $user = $request->user();
+
+        // Validasi jumlah penarikan
+        $request->validate([
+            'jumlah' => 'required|integer|min:10000', // minimal penarikan 10.000
+        ]);
+
+        $jumlah = $request->input('jumlah');
+
+        // Hitung current income (saldo yang bisa ditarik)
+        $transactions = Transaction::whereHas('note', function ($q) use ($user) {
+            $q->where('seller_id', $user->user_id);
+        })
+            ->where('status', 'paid')
+            ->get();
+
+        $totalIncome = $transactions->sum('seller_amount');
+        $withdrawn = WithdrawRequest::where('user_id', $user->user_id)
+            ->where('status', '=', 'diterima_admin')
+            ->sum('jumlah');
+        $currentIncome = $totalIncome - $withdrawn;
+
+        // Cek saldo cukup
+        if ($jumlah > $currentIncome) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Saldo tidak mencukupi untuk penarikan ini.',
+            ], 400);
+        }
+
+        // Buat withdraw request baru
+        $withdraw = WithdrawRequest::create([
+            'user_id' => $user->user_id,
+            'jumlah' => $jumlah,
+            'status' => 'menunggu',
+            'tgl_request' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengajuan penarikan berhasil, menunggu persetujuan admin.',
+            'data' => [
+                'withdraw_request_id' => $withdraw->withdraw_request_id,
+                'user_id' => $user->user_id,
+                'username' => $user->username,
+                'jumlah' => $withdraw->jumlah,
+                'status' => $withdraw->status,
+                'tgl_request' => $withdraw->tgl_request,
+            ]
+        ]);
+    }
 }

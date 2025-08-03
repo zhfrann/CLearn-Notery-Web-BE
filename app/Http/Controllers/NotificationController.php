@@ -107,7 +107,13 @@ class NotificationController extends Controller
                 'user_id' => (int)$id,
                 'type' => 'warning',
                 'body' => $request->body,
-                'is_read' => false
+                'is_read' => false,
+                'data' => [
+                    'admin' => [
+                        'user_id' => $request->user()->user_id ?? null, // jika pakai auth
+                        'username' => $request->user()->username ?? 'Admin',
+                    ],
+                ]
             ]);
 
             if ($request->hasFile('files')) {
@@ -133,7 +139,8 @@ class NotificationController extends Controller
                     'title' => $notification->title,
                     'body' => $notification->body,
                     'files' => $notification->files,
-                    'created_at' => $notification->created_at->toIso8601String()
+                    'created_at' => $notification->created_at->toIso8601String(),
+                    'admin' => $notification->data['admin'] ?? null,
                 ]
             ]);
         } catch (\Exception $e) {
@@ -146,9 +153,15 @@ class NotificationController extends Controller
         }
     }
 
-    public function getUserNotification(Request $request, string $id)
+    public function getUserNotification(Request $request)
     {
+        $id = $request->user()->user_id;
+
         try {
+            Notification::where('user_id', (int)$id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
             // Ambil notifikasi untuk user (personal) dan announcement (global)
             $notifications = Notification::query()
                 ->where(function ($q) use ($id) {
@@ -173,6 +186,7 @@ class NotificationController extends Controller
                     'created_at' => $notification->created_at->toIso8601String(),
                     'buyer' => $buyer,
                     'chat_message' => $notification->data['chat_message'] ?? null,
+                    'note' => $notification->data['note'] ?? null,
                 ];
             });
 
@@ -208,6 +222,52 @@ class NotificationController extends Controller
                     'message_id' => $message->message_id,
                     'pesan' => $message->pesan,
                     'created_at' => $message->created_at->toIso8601String(),
+                ]
+            ]
+        ]);
+        return $notification;
+    }
+
+    public function notifyFavoriteNote($sellerId, $buyer, $note)
+    {
+        $notification = Notification::create([
+            'user_id' => $sellerId,
+            'type' => 'info',
+            'title' => "{$buyer->username} menambahkan produk anda dalam favorit",
+            'body' => "Produk: {$note->judul}",
+            'is_read' => false,
+            'data' => [
+                'buyer' => [
+                    'user_id' => $buyer->user_id,
+                    'username' => $buyer->username,
+                    'foto_profil' => $buyer->foto_profil,
+                ],
+                'note' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
+                ]
+            ]
+        ]);
+        return $notification;
+    }
+
+    public function notifyPayment($sellerId, $buyer, $note)
+    {
+        $notification = Notification::create([
+            'user_id' => $sellerId,
+            'type' => 'info',
+            'title' => "{$buyer->username} telah melakukan pembayaran",
+            'body' => "Pembelian produk: {$note->judul}",
+            'is_read' => false,
+            'data' => [
+                'buyer' => [
+                    'user_id' => $buyer->user_id,
+                    'username' => $buyer->username,
+                    'foto_profil' => $buyer->foto_profil,
+                ],
+                'note' => [
+                    'note_id' => $note->note_id,
+                    'judul' => $note->judul,
                 ]
             ]
         ]);

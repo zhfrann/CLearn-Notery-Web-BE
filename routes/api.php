@@ -113,7 +113,11 @@ Route::middleware(['auth:sanctum', 'checkUserActive'])->group(function () {
     Route::get('/chat-rooms/{chatRoomId}/messages', [ChatController::class, 'getMessages']);
 
     Route::get('/notifications/announcements', [NotificationController::class, 'getAllAnnouncement']);
-    Route::get('/notifications/users/{id}', [NotificationController::class, 'getUserNotification']);
+    Route::get('/notifications/users', [NotificationController::class, 'getUserNotification']);
+
+    Route::get('/earnings', [ProfileDataController::class, 'earning']);
+    Route::post('/earnings/withdraw', [ProfileDataController::class, 'withdraw']);
+    // Route::get('/')
 
     // Route::prefix('/user')->group(function () {
     //     // Route::get(/{id}/notes, [...]);
@@ -129,6 +133,9 @@ Route::prefix('/admin')->middleware(['auth:sanctum', 'isAdmin'])->group(function
 
     Route::get('/notes-submission', [AdminController::class, 'getAllNotesSubmission']);
     Route::get('/notes-submission/handled', [AdminController::class, 'getAllHandledSubmission']);
+
+    Route::get('/withdraw-requests', [AdminController::class, 'getWithdrawRequests']);
+    Route::post('/withdraw-requests/{id}/confirm', [AdminController::class, 'accWithdrawRequests']);
 
     Route::get('/notes-submission/queue', [AdminController::class, 'getAllQueuSubmissions']);
     Route::get('/notes-submission/{id}/queue', [AdminController::class, 'getDetailQueuSubmissions']);

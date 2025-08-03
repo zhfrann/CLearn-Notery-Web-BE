@@ -71,6 +71,16 @@ class InteractionSeeder extends Seeder
                         'tgl_transaksi' => now()->subDays(rand(1, 30)),
                         'catatan' => fake()->sentence(),
                         'bukti_pembayaran' => $buktiBayar,
+
+                        // Calculate all fees
+                        // $notePrice = $note->harga;
+                        // $platformFeeRate = 0.10; // 10%
+                        // $midtransFeeRate = 0.029; // 2.9%
+                        // $midtransFixedFee = 2000; // Rp 2,000
+                        // $grossAmount = $notePrice + $platformFee + $midtransFee;
+                        'jumlah' => ($note->harga + round($note->harga * 0.10) + round(($note->harga * 0.029) + 2000)),
+                        'platform_fee' => round($note->harga * 0.10),
+                        'seller_amount' => $note->harga
                     ]);
                 }
             }

@@ -693,6 +693,9 @@ class NoteController extends Controller
             'user_id' => $user->user_id,
         ]);
 
+        $sellerId = $note->seller_id;
+        app('App\\Http\\Controllers\\NotificationController')->notifyFavoriteNote($sellerId, $user, $note);
+
         return response()->json([
             'success' => true,
             'message' => 'Berhasil menambah favorit note',
@@ -1219,6 +1222,9 @@ class NoteController extends Controller
                     'tgl_transaksi' => now(),
                 ]);
             }
+
+            $sellerId = $note->seller_id;
+            app('App\\Http\\Controllers\\NotificationController')->notifyPayment($sellerId, $buyer, $note, $transaction);
 
             return response()->json([
                 'success' => true,
