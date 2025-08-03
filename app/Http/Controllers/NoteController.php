@@ -26,6 +26,7 @@ class NoteController extends Controller
         $validated = $request->validate([
             'size' => 'nullable|integer|min:1|max:100',
             'page' => 'nullable|integer|min:1',
+            'search' => 'nullable|string|max:255',
         ]);
 
         $topCreatorIds = $this->getTopCreatorsId();
@@ -47,6 +48,30 @@ class NoteController extends Controller
             'transactions',
             'reviews',
         ])->orderBy('note_id', 'asc');
+
+        // Tambahkan filter search dinamis
+        if (!empty($validated['search'])) {
+            $search = $validated['search'];
+            $notesQuery->where(function ($q) use ($search) {
+                $q->where('judul', 'like', "%$search%")
+                    ->orWhereHas('course', function ($q2) use ($search) {
+                        $q2->where('nama_mk', 'like', "%$search%");
+                    })
+                    ->orWhereHas('course.major', function ($q2) use ($search) {
+                        $q2->where('nama_jurusan', 'like', "%$search%");
+                    })
+                    ->orWhereHas('course.major.faculty', function ($q2) use ($search) {
+                        $q2->where('nama_fakultas', 'like', "%$search%");
+                    })
+                    ->orWhereHas('seller', function ($q2) use ($search) {
+                        $q2->where('username', 'like', "%$search%")
+                            ->orWhere('nama', 'like', "%$search%");
+                    })
+                    ->orWhereHas('noteTags.tag', function ($q2) use ($search) {
+                        $q2->where('nama_tag', 'like', "%$search%");
+                    });
+            });
+        }
 
         $paginatedNotes = $notesQuery->paginate($size, ['*'], 'page', $page);
 
@@ -88,10 +113,10 @@ class NoteController extends Controller
                     'id' => $semester->semester_id,
                     'nama' => $semester->nomor_semester,
                 ] : null,
-                'matkul_favorit' => $course ? [
-                    'id' => $course->course_id,
-                    'nama' => $course->nama_mk,
-                ] : null,
+                // 'matkul_favorit' => $course ? [
+                //     'id' => $course->course_id,
+                //     'nama' => $course->nama_mk,
+                // ] : null,
                 'tags' => $note->noteTags->map(function ($nt) {
                     return $nt->tag->nama_tag ?? null;
                 })->filter()->values(),
