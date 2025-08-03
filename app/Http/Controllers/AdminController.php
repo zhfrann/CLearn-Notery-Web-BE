@@ -208,7 +208,8 @@ class AdminController extends Controller
 
         // Query notes yang statusnya 'menunggu'
         $notesQuery = Note::query()->whereHas('noteStatus', function ($q) {
-            $q->whereIn('status', ['diterima', 'ditolak']);
+            // $q->whereIn('status', ['diterima', 'ditolak']);
+            $q->whereIn('status', ['diterima']);
         })
             ->with([
                 'seller:user_id,nama,username,foto_profil',
