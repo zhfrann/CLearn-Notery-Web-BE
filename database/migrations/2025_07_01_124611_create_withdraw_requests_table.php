@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('withdraw_requests', function (Blueprint $table) {
             $table->id('withdraw_request_id');
             $table->foreignId('user_id')->constrained('users', 'user_id')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('payout_method_id')->constrained('payout_methods', 'payout_method_id');
-            $table->integer('jumlah');
-            $table->string('status');
+            // $table->foreignId('payout_method_id')->constrained('payout_methods', 'payout_method_id');
+            $table->integer('jumlah')->default(0);
+            $table->enum('status', ['menunggu', 'diterima_admin'])->default('menunggu');
             $table->datetime('tgl_request')->useCurrent();
-            $table->datetime('tgl_transfer')->useCurrent();
+            // $table->datetime('tgl_transfer')->useCurrent();
             $table->timestamps();
         });
     }

@@ -7,11 +7,65 @@ use App\Models\Note;
 use App\Models\Report;
 use App\Models\User;
 use App\Models\UserAction;
+use App\Models\WithdrawRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    public function getWithdrawRequests(Request $request)
+    {
+        $withdrawRequests = WithdrawRequest::with('user')
+            // ->where('status', 'menunggu')
+            ->orderBy('tgl_request', 'asc')
+            ->get()
+            ->map(function ($data) {
+                return [
+                    'withdraw_request_id' => $data->withdraw_request_id,
+                    'user_id' => $data->user_id,
+                    'username' => $data->user->username ?? null,
+                    'jumlah' => $data->jumlah,
+                    'status' => $data->status,
+                    'tgl_request' => $data->tgl_request,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar pengajuan withdraw menunggu',
+            'data' => $withdrawRequests
+        ]);
+    }
+
+    public function accWithdrawRequests(Request $request, string $id)
+    {
+        $withdraw = WithdrawRequest::find($id);
+
+        if (!$withdraw || $withdraw->status !== 'menunggu') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Withdraw request tidak ditemukan atau sudah diproses.',
+            ], 404);
+        }
+
+        $withdraw->status = 'diterima_admin';
+        // $withdraw->tgl_transfer = now(); // jika ada kolom tgl_transfer
+        $withdraw->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Withdraw request berhasil diupdate.',
+            'data' => [
+                'withdraw_request_id' => $withdraw->withdraw_request_id,
+                'user_id' => $withdraw->user_id,
+                'username' => $withdraw->user->username ?? null,
+                'jumlah' => $withdraw->jumlah,
+                'status' => $withdraw->status,
+                'tgl_request' => $withdraw->tgl_request,
+            ]
+        ]);
+    }
+
     // GET /api/admin/reports - Get all reports for admin
     public function getAllReports(Request $request)
     {

@@ -18,11 +18,11 @@ class WithdrawRequest extends Model
 
     protected $fillable = [
         'user_id',
-        'payout_method_id',
+        // 'payout_method_id',
         'jumlah',
         'status',
         'tgl_request',
-        'tgl_transfer'
+        // 'tgl_transfer'
     ];
 
     public function user(): BelongsTo
