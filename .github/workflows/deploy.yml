@@ -1,0 +1,24 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy app
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/rahman/CLearn-Notery-Web-BE
+            git reset --hard HEAD
+            git pull origin main --rebase
+            COMPOSER_ALLOW_SUPERUSER=1 composer update --no-interaction
+            sudo systemctl restart clearnnotery.service
