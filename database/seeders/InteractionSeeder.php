@@ -31,7 +31,7 @@ class InteractionSeeder extends Seeder
         $notes = Note::all();
 
         foreach ($notes as $note) {
-            $eligibleUsers = $users->where('user_id', '!=', $note->seller_id);
+            $eligibleUsers = $users->where('user_id', '!=', $note->seller_id)->where('role', 'student');
 
             // ====== FAVORIT ======
             $takeFav = min($eligibleUsers->count(), rand(1, 3));
