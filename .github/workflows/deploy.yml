@@ -20,7 +20,7 @@ jobs:
             cd /home/rahman/CLearn-Notery-Web-BE
             git reset --hard HEAD
             git pull origin main --rebase
+            COMPOSER_ALLOW_SUPERUSER=1 composer update --no-interaction
             php artisan migrate:rollback
             php artisan migrate --seed
-            COMPOSER_ALLOW_SUPERUSER=1 composer update --no-interaction
             sudo systemctl restart clearnnotery.service
