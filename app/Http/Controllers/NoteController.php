@@ -1319,6 +1319,57 @@ class NoteController extends Controller
         ]);
     }
 
+    // POST /payment/notification
+    public function handleMidtransNotification(Request $request)
+    {
+        // Ambil payload notifikasi dari Midtrans
+        $notif = $request->all();
+
+        // Atau gunakan Midtrans Notification helper (jika sudah install midtrans/midtrans-php)
+        try {
+            $serverKey = config('midtrans.server_key');
+            $signatureKey = $request->header('X-Signature-Key');
+            $expectedSignature = hash('sha512', $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
+
+            // Validasi signature (opsional, tapi disarankan)
+            if ($signatureKey !== $expectedSignature) {
+                return response()->json(['message' => 'Invalid signature'], 403);
+            }
+
+            $transactionStatus = $notif['transaction_status'] ?? null;
+            $orderId = $notif['order_id'] ?? null;
+            $fraudStatus = $notif['fraud_status'] ?? null;
+
+            // Cari transaksi berdasarkan order_id
+            $transaction = Transaction::where('midtrans_order_id', $orderId)->first();
+
+            if (!$transaction) {
+                return response()->json(['message' => 'Transaction not found'], 404);
+            }
+
+            // Update status transaksi sesuai status dari Midtrans
+            if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
+                $transaction->status = 'paid';
+            } elseif ($transactionStatus == 'pending') {
+                $transaction->status = 'pending';
+            } elseif ($transactionStatus == 'deny' || $transactionStatus == 'expire' || $transactionStatus == 'cancel') {
+                $transaction->status = 'failed';
+            }
+            $transaction->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification processed',
+                'data' => $transaction
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function getTopCreatorsId()
     {
         return User::whereHas('notes', function ($q) {
