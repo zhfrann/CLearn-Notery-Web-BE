@@ -24,3 +24,4 @@ jobs:
             php artisan migrate:rollback
             php artisan migrate --seed
             sudo systemctl restart clearnnotery.service
+            sudo systemctl restart notery2.service
