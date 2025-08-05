@@ -1171,7 +1171,7 @@ class NoteController extends Controller
 
         // Calculate all fees
         $notePrice = $note->harga;
-        $platformFeeRate = 0.10; // 10%
+        $platformFeeRate = 0.15; // 15%
         $midtransFeeRate = 0.029; // 2.9%
         $midtransFixedFee = 2000; // Rp 2,000
 
@@ -1180,10 +1180,11 @@ class NoteController extends Controller
         $midtransFee = round(($notePrice * $midtransFeeRate) + $midtransFixedFee);
 
         // Total yang dibayar buyer
-        $grossAmount = $notePrice + $platformFee + $midtransFee;
+        // $grossAmount = $notePrice + $platformFee + $midtransFee;
+        $grossAmount = $notePrice;
 
         // Amount yang masuk ke seller (note price aja)
-        $sellerAmount = $notePrice;
+        $sellerAmount = $notePrice - $platformFee - $midtransFee;
 
         // Prepare Midtrans parameters
         $params = [
