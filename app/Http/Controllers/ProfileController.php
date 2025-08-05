@@ -142,7 +142,8 @@ class ProfileController extends Controller
 
         if (!$isFilter) {
             // TANPA FILTER: notes milik user sendiri
-            $notesDijualQuery = Note::where('seller_id', $user->user_id)
+            $notesDijualQuery = Note::whereHas('noteStatus', fn($q) => $q->where('status', 'diterima'))
+                ->where('seller_id', $user->user_id)
                 ->with(['seller', 'noteTags.tag', 'reviews', 'likes', 'savedByUsers', 'transactions', 'course.semester.major.faculty']);
         } else {
             // DENGAN FILTER: notes yang bisa dibeli (bukan milik user, status diterima)
