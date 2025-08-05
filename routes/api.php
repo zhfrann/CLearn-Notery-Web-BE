@@ -127,6 +127,8 @@ Route::middleware(['auth:sanctum', 'checkUserActive'])->group(function () {
     // ...
 });
 
+Route::post('/payment/notification', [NoteController::class, 'handleMidtransNotification']);
+
 Route::prefix('/admin')->middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 
     Route::get('/reports', [AdminController::class, 'getAllReports']);
