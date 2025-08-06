@@ -1016,6 +1016,9 @@ class NoteController extends Controller
         // if ($note->gambar_preview && Storage::disk('public')->exists($note->gambar_preview)) {
         //     Storage::disk('public')->delete($note->gambar_preview);
         // }
+        if ($note->gambar_preview && $note->gambar_preview !== 'images/default_preview.png') {
+            Storage::disk('public')->delete($note->gambar_preview);
+        }
 
         // $note->files()->delete();
         // $note->noteTags()->delete();
