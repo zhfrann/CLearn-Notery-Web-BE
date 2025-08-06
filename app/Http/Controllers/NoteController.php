@@ -47,7 +47,8 @@ class NoteController extends Controller
             'savedByUsers',
             'transactions',
             'reviews',
-        ])->orderBy('note_id', 'asc');
+        // ])->orderBy('note_id', 'asc');
+        ])->orderBy('created_at', 'desc');
 
         // Tambahkan filter search dinamis
         if (!empty($validated['search'])) {
