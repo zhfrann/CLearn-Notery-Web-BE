@@ -537,6 +537,7 @@ class AdminController extends Controller
             return response()->json([
                 "success" => false,
                 "message" => "User sudah di ban",
+                "isBanned" => true,
             ], 400);
         }
 
@@ -549,6 +550,7 @@ class AdminController extends Controller
             "data" => [
                 "user_id" => $user->user_id,
                 "status_akun" => $user->status_akun,
+                "isBanned" => true,
             ]
         ]);
     }
@@ -568,6 +570,7 @@ class AdminController extends Controller
             return response()->json([
                 "success" => false,
                 "message" => "User sedang tidak dalam status banned",
+                "isBanned" => false,
             ], 400);
         }
 
@@ -580,6 +583,7 @@ class AdminController extends Controller
             "data" => [
                 "user_id" => $user->user_id,
                 "status_akun" => $user->status_akun,
+                "isBanned" => false,
             ]
         ]);
     }
