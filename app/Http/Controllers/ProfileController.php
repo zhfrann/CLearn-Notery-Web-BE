@@ -118,7 +118,7 @@ class ProfileController extends Controller
                 'jumlah_dikunjungi' => $note->jumlah_dikunjungi,
                 'jumlah_terjual' => $note->transactions->where('status', 'success')->count(),
                 'rating' => round($note->reviews->avg('rating') ?? 0, 2),
-                'gambar_preview' => asset('storage/' . $note->gambar_preview),
+                'gambar_preview' => url(asset('storage/' . $note->gambar_preview)),
                 'tags' => $note->noteTags->pluck('tag.nama_tag'),
                 'isLiked' => $user ? $note->likes->contains('user_id', $user->user_id) : false,
                 'isFavorite' => $user ? $note->savedByUsers->contains('user_id', $user->user_id) : false,
