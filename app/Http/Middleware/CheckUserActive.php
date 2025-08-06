@@ -20,6 +20,7 @@ class CheckUserActive
             return response()->json([
                 'success' => false,
                 'message' => 'Akun Anda telah diban. Silakan hubungi admin.',
+                'isBanned' => true
             ], 403);
         }
 
