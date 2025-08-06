@@ -146,6 +146,7 @@ Route::prefix('/admin')->middleware(['auth:sanctum', 'isAdmin'])->group(function
 
     Route::get('/users', [AdminController::class, 'getAllUsers']);
     Route::patch('/users/{id}/ban', [AdminController::class, 'banUser']);
+    Route::patch('/users/{id}/unban', [AdminController::class, 'unbanUser']);
 
     Route::post('/notifications/announcements', [NotificationController::class, 'createAnnouncement']);
     Route::post('/notifications/users/{id}/warnings', [NotificationController::class, 'createWarning']);
