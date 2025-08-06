@@ -18,7 +18,8 @@ class IsAdmin
         if ($request->user()->role !== 'admin') {
             return response()->json([
                 "success" => false,
-                "message" => "Anda bukan admin"
+                "message" => "Anda bukan admin",
+                'isBanned' => true
             ], 401);
         }
 

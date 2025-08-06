@@ -1013,9 +1013,9 @@ class NoteController extends Controller
         }
 
         // Hapus gambar preview jika ada
-        if ($note->gambar_preview && Storage::disk('public')->exists($note->gambar_preview)) {
-            Storage::disk('public')->delete($note->gambar_preview);
-        }
+        // if ($note->gambar_preview && Storage::disk('public')->exists($note->gambar_preview)) {
+        //     Storage::disk('public')->delete($note->gambar_preview);
+        // }
 
         // $note->files()->delete();
         // $note->noteTags()->delete();
