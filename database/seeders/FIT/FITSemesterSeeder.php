@@ -84,7 +84,7 @@ class FITSemesterSeeder extends Seeder
 
         // DSM
         $DSM_major_id = Major::query()->where('kode_jurusan', 'DSM')->first()->major_id;
-        for ($i = 1; $i <= 6; $i++) {
+        for ($i = 1; $i <= 8; $i++) {
             Semester::query()->create([
                 'major_id' => $DSM_major_id,
                 'nomor_semester' => $i,
