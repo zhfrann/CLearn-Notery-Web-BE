@@ -537,6 +537,7 @@ class AdminController extends Controller
             return response()->json([
                 "success" => false,
                 "message" => "User sudah di ban",
+                "isBanned" => true,
             ], 400);
         }
 
@@ -549,6 +550,40 @@ class AdminController extends Controller
             "data" => [
                 "user_id" => $user->user_id,
                 "status_akun" => $user->status_akun,
+                "isBanned" => true,
+            ]
+        ]);
+    }
+
+    public function unbanUser(Request $request, string $id)
+    {
+        $user = User::query()->where('user_id', '=', $id)->first();
+
+        if (!$user) {
+            return response()->json([
+                "success" => false,
+                "message" => "User tidak ditemukan",
+            ], 404);
+        }
+
+        if ($user->status_akun == 'aktif') {
+            return response()->json([
+                "success" => false,
+                "message" => "User sedang tidak dalam status banned",
+                "isBanned" => false,
+            ], 400);
+        }
+
+        $user->status_akun = 'aktif';
+        $user->save();
+
+        return response()->json([
+            "success" => true,
+            "message" => "User berhasil di-unban",
+            "data" => [
+                "user_id" => $user->user_id,
+                "status_akun" => $user->status_akun,
+                "isBanned" => false,
             ]
         ]);
     }
