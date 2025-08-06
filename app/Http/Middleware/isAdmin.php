@@ -19,7 +19,6 @@ class IsAdmin
             return response()->json([
                 "success" => false,
                 "message" => "Anda bukan admin",
-                'isBanned' => true
             ], 401);
         }
 
