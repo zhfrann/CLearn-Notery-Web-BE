@@ -187,6 +187,7 @@ class ProfileDataController extends Controller
             'message' => 'Detail transaksi',
             'data' => [
                 'transaction_id' => $transaction->transaction_id,
+                'order_id' => $transaction->midtrans_order_id,
                 'note_id' => $transaction->note->note_id,
                 'judul' => $transaction->note->judul,
                 'harga' => $transaction->note->harga,
